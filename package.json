@@ -18,5 +18,8 @@
     "form-data-encoder": "^4.0.2",
     "formdata-node": "^6.0.3",
     "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@vercel/node": "^3.2.23"
   }
 }
