@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Profile Picture Selector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h2 {
+            color: #0077cc;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        #profile-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .profile-option {
+            width: 100px;
+            height: 100px;
+            border: 2px solid transparent;
+            border-radius: 50%;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            cursor: pointer;
+        }
+        .profile-option:hover {
+            transform: scale(1.1);
+            border-color: #0077cc;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #0077cc;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h2>Select a Profile Picture</h2>
+        <p>We know choosing the perfect profile picture can be tough! In the meantime, why not pick one of our RMIT-themed images to add some flair to your profile.</p>
+        <div id="profile-options">
+            <img src="imgs/profile_happy.png" class="profile-option" id="happy" alt="Profile picture based on RMIT logo that shows a face as 'Happy Face'">
+            <img src="imgs/profile_glide.png" class="profile-option" id="glide" alt="Profile picture based on RMIT logo that shows a face as 'Glide Face'">
+            <img src="imgs/profile_cheery.png" class="profile-option" id="cheery" alt="Profile picture based on RMIT logo that shows a face as 'Cheery Face'">
+            <img src="imgs/profile_glasses.png" class="profile-option" id="glasses" alt="Profile picture based on RMIT logo that shows a face as 'Glasses Face'">
+            <img src="imgs/profile_cat.png" class="profile-option" id="cat" alt="Profile picture based on RMIT logo that shows a face as 'Cat Face'">
+            <img src="imgs/profile_skull.png" class="profile-option" id="skull" alt="Profile picture based on RMIT logo that shows a face as 'Skull Face'">
+            <img src="imgs/profile_bot.png" class="profile-option" id="bot" alt="Profile picture based on RMIT logo that shows a face as 'Bot Face'">
+        </div>
+        <p id="status"></p>
+    </div>
+
+    <script>
+        document.querySelectorAll('.profile-option').forEach(img => {
+            img.addEventListener('click', () => {
+                const imageUrl = img.src;
+                document.getElementById('status').innerText = `Uploading ${img.alt}...`;
+
+                // Send the selected image URL to the server
+                fetch('/upload-profile-picture', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ imageUrl: imageUrl })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        document.getElementById('status').innerText = data.message;
+                    } else {
+                        document.getElementById('status').innerText = 'Failed to upload profile picture.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('status').innerText = 'Error uploading profile picture.';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

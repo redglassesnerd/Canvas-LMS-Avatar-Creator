@@ -1,0 +1,22 @@
+{
+  "name": "canvasaddfixedprofile",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "form-data": "^4.0.1",
+    "form-data-encoder": "^4.0.2",
+    "formdata-node": "^6.0.3",
+    "node-fetch": "^3.3.2"
+  }
+}
