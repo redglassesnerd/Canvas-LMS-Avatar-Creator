@@ -1,64 +1,64 @@
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
-import FormData from 'form-data';
-import { Buffer } from 'buffer';
 
-// Load environment variables
 dotenv.config();
 
 export default async (req, res) => {
   // Only allow POST requests
   if (req.method !== 'POST') {
-    console.log('Received a non-POST request. Method:', req.method);
     return res.status(405).send('Method Not Allowed');
   }
 
   const { imageUrl } = req.body;
-  console.log('Received request to upload profile picture. Image URL:', imageUrl);
+  console.log('Received request to set profile picture. Image URL:', imageUrl);
 
   try {
-    // Fetch the image
-    console.log('Fetching image from URL:', imageUrl);
-    const imageResponse = await fetch(imageUrl);
-
-    if (!imageResponse.ok) {
-      console.log(`Error fetching image from ${imageUrl}:`, imageResponse.status, imageResponse.statusText);
-      throw new Error(`Error fetching image: ${imageResponse.status} ${imageResponse.statusText}`);
+    // Step 1: Verify the image URL (optional validation for a valid URL)
+    if (!imageUrl || typeof imageUrl !== 'string') {
+      throw new Error('Invalid image URL provided.');
     }
 
-    // Convert the image to buffer
-    const arrayBuffer = await imageResponse.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    console.log('Image fetched successfully. Uploading to Canvas...');
-
-    // Prepare the form data
-    const formData = new FormData();
-    formData.append('file', buffer, { filename: 'profile_picture.png', contentType: 'image/png' });
-
-    // Upload the file to Canvas
-    const uploadResponse = await fetch(`${process.env.CANVAS_BASE_URL}/api/v1/users/self/files`, {
-      method: 'POST',
+    // Step 2: Get avatar options from Canvas (optional if needed)
+    console.log('Fetching avatar options from Canvas...');
+    const avatarOptionsResponse = await fetch(`${process.env.CANVAS_BASE_URL}/api/v1/users/self/avatars`, {
+      method: 'GET',
       headers: {
         'Authorization': `Bearer ${process.env.CANVAS_API_TOKEN}`,
+        'Content-Type': 'application/json',
       },
-      body: formData,
     });
 
-    const uploadData = await uploadResponse.json();
-    console.log('Upload Response Data:', uploadData);
+    const avatarOptions = await avatarOptionsResponse.json();
+    console.log('Avatar Options:', avatarOptions);
 
-    // Finalize the upload
-    if (!uploadData.upload_url) {
-      console.log('Failed to get upload URL from Canvas.');
-      return res.status(500).json({ error: 'Failed to upload image to Canvas.' });
+    // Step 3: Set the image URL as the profile picture
+    console.log('Setting image URL as profile picture...');
+    const updateResponse = await fetch(`${process.env.CANVAS_BASE_URL}/api/v1/users/self`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${process.env.CANVAS_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user: {
+          avatar: {
+            url: imageUrl,  // Directly using the image URL
+          },
+        },
+      }),
+    });
+
+    const updateData = await updateResponse.json();
+    console.log('Update Profile Picture Response:', updateData);
+
+    if (updateData.errors) {
+      throw new Error('Failed to update profile picture in Canvas.');
     }
 
-    console.log('Image uploaded successfully. Fetching avatar options...');
-    
-    // Continue with the rest of the logic (setting the avatar)...
+    res.status(200).json({ message: 'Profile picture updated successfully!' });
 
   } catch (error) {
-    console.error('Error occurred during profile picture upload:', error);
-    res.status(500).json({ error: 'Failed to upload and set profile picture.' });
+    console.error('Error occurred during profile picture update:', error);
+    res.status(500).json({ error: `Failed to update profile picture: ${error.message}` });
   }
 };
