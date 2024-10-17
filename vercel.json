@@ -1,15 +1,13 @@
 {
     "version": 2,
-    "builds": [
-      {
-        "src": "api/upload-profile-picture.js",
-        "use": "@vercel/node"
-      }
-    ],
     "routes": [
       {
+        "src": "/api/(.*)",
+        "dest": "/api/upload-profile-picture.mjs"
+      },
+      {
         "src": "/(.*)",
-        "dest": "/api/upload-profile-picture.js"
+        "dest": "/public/$1"
       }
     ]
   }
