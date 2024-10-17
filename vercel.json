@@ -2,14 +2,14 @@
     "version": 2,
     "builds": [
       {
-        "src": "server.mjs",
+        "src": "api/upload-profile-picture.js",
         "use": "@vercel/node"
       }
     ],
     "routes": [
       {
         "src": "/(.*)",
-        "dest": "/server.mjs"
+        "dest": "/api/upload-profile-picture.js"
       }
     ]
   }
