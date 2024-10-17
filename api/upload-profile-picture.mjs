@@ -1,9 +1,8 @@
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
-import FormData from 'form-data';  // For handling form uploads
-import { Buffer } from 'buffer';  // To handle binary data
+import FormData from 'form-data';
+import { Buffer } from 'buffer';
 
-// Load environment variables from .env file
 dotenv.config();
 
 export default async (req, res) => {
@@ -13,21 +12,23 @@ export default async (req, res) => {
   }
 
   const { imageUrl } = req.body;
+  console.log('Received request to upload profile picture. Image URL:', imageUrl);
 
   try {
-    console.log('Fetching image from URL:', imageUrl);
-
     // Step 1: Fetch the image from the provided URL
+    console.log('Fetching image from URL:', imageUrl);
     const imageResponse = await fetch(imageUrl);
+
     if (!imageResponse.ok) {
-      throw new Error(`Error fetching image from ${imageUrl}`);
+      throw new Error(`Error fetching image from ${imageUrl}: ${imageResponse.status} ${imageResponse.statusText}`);
     }
+
+    console.log('Image fetched successfully. Status:', imageResponse.status);
 
     // Step 2: Convert the image response to ArrayBuffer
     const arrayBuffer = await imageResponse.arrayBuffer();
-    const contentType = imageResponse.headers.get('content-type') || 'image/png'; // Get the correct content type
-
-    console.log('Image fetched successfully.');
+    const contentType = imageResponse.headers.get('content-type') || 'image/png';
+    console.log('Image content type:', contentType);
 
     // Step 3: Convert ArrayBuffer to Buffer
     const buffer = Buffer.from(arrayBuffer);
@@ -38,7 +39,7 @@ export default async (req, res) => {
       filename: 'profile_picture.png',
       contentType: contentType,
     });
-    formData.append('parent_folder_path', 'profile pictures'); // Specify the folder
+    formData.append('parent_folder_path', 'profile pictures');
 
     console.log('Uploading image to Canvas...');
 
@@ -52,10 +53,10 @@ export default async (req, res) => {
     });
 
     const uploadData = await uploadResponse.json();
-    console.log('Upload Response:', uploadData);
+    console.log('Upload Response Data:', uploadData);
 
     if (!uploadData.upload_url) {
-      return res.status(500).json({ error: 'Failed to initiate upload' });
+      throw new Error('Failed to get upload URL from Canvas.');
     }
 
     // Step 6: Finalize the upload
@@ -72,13 +73,14 @@ export default async (req, res) => {
     });
 
     const finalUploadData = await finalUploadResponse.json();
-    console.log('Final Upload Response:', finalUploadData);
+    console.log('Final Upload Data:', finalUploadData);
 
     if (!finalUploadData.id) {
-      throw new Error('Failed to upload the image.');
+      throw new Error('Failed to finalize image upload to Canvas.');
     }
 
     // Step 7: Get avatar options from Canvas
+    console.log('Fetching avatar options from Canvas...');
     const avatarOptionsResponse = await fetch(`${process.env.CANVAS_BASE_URL}/api/v1/users/self/avatars`, {
       method: 'GET',
       headers: {
@@ -90,16 +92,15 @@ export default async (req, res) => {
     const avatarOptions = await avatarOptionsResponse.json();
     console.log('Avatar Options:', avatarOptions);
 
-    // Step 8: Find the uploaded image in the avatar options and get its token
     const uploadedAvatar = avatarOptions.find((option) => option.id === finalUploadData.id);
     if (!uploadedAvatar) {
-      return res.status(500).json({ error: 'Uploaded image not found in avatar options.' });
+      throw new Error('Uploaded image not found in avatar options.');
     }
 
     const avatarToken = uploadedAvatar.token;
     console.log('Avatar Token:', avatarToken);
 
-    // Step 9: Set the uploaded image as the profile picture using the avatar token
+    // Step 8: Set the uploaded image as the profile picture
     const updateResponse = await fetch(`${process.env.CANVAS_BASE_URL}/api/v1/users/self`, {
       method: 'PUT',
       headers: {
@@ -109,7 +110,7 @@ export default async (req, res) => {
       body: JSON.stringify({
         user: {
           avatar: {
-            token: avatarToken, // Use the avatar token to set as profile picture
+            token: avatarToken,
           },
         },
       }),
@@ -119,14 +120,14 @@ export default async (req, res) => {
     console.log('Update Profile Picture Response:', updateData);
 
     if (updateData.errors) {
-      return res.status(500).json({ error: 'Failed to update profile picture in Canvas.' });
+      throw new Error('Failed to update profile picture in Canvas.');
     }
 
-    // Step 10: Return a success response
+    console.log('Profile picture updated successfully.');
     res.status(200).json({ message: 'Profile picture updated successfully!' });
 
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Failed to upload and set profile picture.' });
+    console.error('Error occurred during profile picture upload:', error);
+    res.status(500).json({ error: `Failed to upload and set profile picture: ${error.message}` });
   }
 };
