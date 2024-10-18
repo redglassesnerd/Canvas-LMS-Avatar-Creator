@@ -56,7 +56,7 @@ export default async (req, res) => {
     // Check if response is OK before parsing JSON
     if (!updateResponse.ok) {
       const errorText = await updateResponse.text();
-      throw new Error(`Failed to update profile picture: ${updateResponse.statusText}. Response: ${errorText}`);
+      throw new Error(`Failed to add profile picture: ${updateResponse.statusText}. Response: ${errorText}`);
     }
 
     const updateData = await updateResponse.json();
