@@ -63,19 +63,23 @@
     </div>
 
     <script>
+        // Get the base URL of the current page
+        const baseUrl = window.location.origin;
+    
+        // Add event listeners to each profile image option
         document.querySelectorAll('.profile-option').forEach(img => {
             img.addEventListener('click', () => {
                 const imageUrl = img.src;
                 document.getElementById('status').innerText = `Uploading ${img.alt}...`;
-
+    
                 // Send the selected image URL to the server
                 fetch(`${baseUrl}/api/upload-profile-picture`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ imageUrl: imageUrl })
-        })
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ imageUrl: imageUrl })
+                })
                 .then(response => response.json())
                 .then(data => {
                     if (data.message) {
