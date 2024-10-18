@@ -69,13 +69,13 @@
                 document.getElementById('status').innerText = `Uploading ${img.alt}...`;
 
                 // Send the selected image URL to the server
-                fetch('/api/upload-profile-picture', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ imageUrl: imageUrl })
-                })
+                fetch(`${baseUrl}/api/upload-profile-picture`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ imageUrl: imageUrl })
+        })
                 .then(response => response.json())
                 .then(data => {
                     if (data.message) {
