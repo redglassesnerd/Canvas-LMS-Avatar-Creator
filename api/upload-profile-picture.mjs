@@ -28,6 +28,11 @@ export default async (req, res) => {
       },
     });
 
+    // Check if response is OK before parsing JSON
+    if (!avatarOptionsResponse.ok) {
+      throw new Error(`Error fetching avatar options: ${avatarOptionsResponse.statusText}`);
+    }
+
     const avatarOptions = await avatarOptionsResponse.json();
     console.log('Avatar Options:', avatarOptions);
 
@@ -48,12 +53,14 @@ export default async (req, res) => {
       }),
     });
 
+    // Check if response is OK before parsing JSON
+    if (!updateResponse.ok) {
+      const errorText = await updateResponse.text();
+      throw new Error(`Failed to update profile picture: ${updateResponse.statusText}. Response: ${errorText}`);
+    }
+
     const updateData = await updateResponse.json();
     console.log('Update Profile Picture Response:', updateData);
-
-    if (updateData.errors) {
-      throw new Error('Failed to update profile picture in Canvas.');
-    }
 
     res.status(200).json({ message: 'Profile picture updated successfully!' });
 
