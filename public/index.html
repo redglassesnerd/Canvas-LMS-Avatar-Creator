@@ -58,6 +58,10 @@
             <img src="/imgs/profile_cat.png" class="profile-option" id="cat" alt="Profile picture based on RMIT logo that shows a face as 'Cat Face'">
             <img src="/imgs/profile_skull.png" class="profile-option" id="skull" alt="Profile picture based on RMIT logo that shows a face as 'Skull Face'">
             <img src="/imgs/profile_bot.png" class="profile-option" id="bot" alt="Profile picture based on RMIT logo that shows a face as 'Bot Face'">
+            <img src="/imgs/profile_bball.png" class="profile-option" id="bot" alt="Profile picture based on RMIT logo that shows a face as 'Bot Face'">
+            <img src="/imgs/profile_dog.png" class="profile-option" id="bot" alt="Profile picture based on RMIT logo that shows a face as 'Bot Face'">
+            <img src="/imgs/profile_dots.png" class="profile-option" id="bot" alt="Profile picture based on RMIT logo that shows a face as 'Bot Face'">
+            <img src="/imgs/profile_read.png" class="profile-option" id="bot" alt="Profile picture based on RMIT logo that shows a face as 'Bot Face'">
         </div>
         <p id="status"></p>
     </div>
@@ -70,7 +74,7 @@
         document.querySelectorAll('.profile-option').forEach(img => {
             img.addEventListener('click', () => {
                 const imageUrl = img.src;
-                document.getElementById('status').innerText = `Uploading ${img.alt}...`;
+                document.getElementById('status').innerText = `Adding ${img.alt}...`;
     
                 // Send the selected image URL to the server
                 fetch(`${baseUrl}/api/upload-profile-picture`, {
