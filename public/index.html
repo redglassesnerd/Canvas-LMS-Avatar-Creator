@@ -98,6 +98,34 @@
             background: #e61e2a;
             color: white;
         }
+
+        .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #0077cc;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .loading-message {
+        display: flex;
+        align-items: center;
+        font-size: 16px;
+        color: #0077cc;
+        text-align: center;
+        margin-top: 20px;
+    }
     </style>
 </head>
 <body>
@@ -220,13 +248,43 @@ document.querySelectorAll('.profile-option').forEach(button => {
             avatarSelection.style.display = 'block';
         });
 
-        // Add to profile action
-        addButton.addEventListener('click', () => {
+     // Add to profile action with loading effect
+addButton.addEventListener('click', async () => {
+    const imageUrl = selectedAvatar.src; // Get the selected image URL
+
+    // Show loading message
+    confirmation.innerHTML = `
+        <div class="loading-message">
+            <div class="spinner"></div>
+            Uploading your profile picture, please wait...
+        </div>`;
+
+    try {
+        const response = await fetch('/api/upload-profile-picture', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ imageUrl }),
+        });
+
+        const result = await response.json();
+        if (response.ok) {
             confirmation.innerHTML = `
                 <p style="color: #0077cc; font-size: 16px; text-align: center; margin-top: 20px;">
-                    Your profile picture has been successfully updated!
+                    ${result.message || 'Your profile picture has been successfully updated!'}
                 </p>`;
-        });
+        } else {
+            throw new Error(result.error || 'An error occurred');
+        }
+    } catch (error) {
+        confirmation.innerHTML = `
+            <p style="color: red; font-size: 16px; text-align: center; margin-top: 20px;">
+                Failed to update profile picture. Please try again.
+            </p>`;
+        console.error('Error updating profile picture:', error);
+    }
+});
     </script>
 </body>
 </html>
