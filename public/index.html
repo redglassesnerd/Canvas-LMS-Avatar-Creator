@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: #F1F2EF;
             color: #333;
             margin: 0;
             padding: 20px;
@@ -32,71 +32,200 @@
             height: 100px;
             border: 2px solid transparent;
             border-radius: 50%;
-            transition: transform 0.3s ease, border-color 0.3s ease;
+            background-size: cover;
+            background-position: center;
             cursor: pointer;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            padding: 0;
+            outline: none;
+            border: none;
         }
+        .profile-option:focus,
         .profile-option:hover {
             transform: scale(1.1);
-            border-color: #0077cc;
+            border: 2px solid #0077cc;
         }
-        #status {
-            margin-top: 20px;
-            font-size: 14px;
+        .add-profile-link {
+            display: block;
+            text-align: center;
             color: #0077cc;
+            font-size: 16px;
+            text-decoration: underline;
+            margin-top: 20px;
+        }
+        .confirmation {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            padding: 25px;
+            background: #f1f2ef;
+            border-radius: 8px;
+        }
+        .confirmation img {
+            width: 100px;
+            height: 100px;
+        }
+        .confirmation h3 {
+            color: #000054;
+            font-size: 22px;
+            font-weight: 500;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .confirmation-buttons {
+            display: flex;
+            gap: 24px;
+        }
+        .confirmation-button {
+            width: 180px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+        }
+        .confirmation-button:focus {
+            outline: 2px solid #0056b3;
+        }
+        .cancel-button {
+            background: #000054;
+            color: white;
+        }
+        .add-button {
+            background: #e61e2a;
+            color: white;
         }
     </style>
 </head>
 <body>
-    <div>
-        <h2>Select a RMIT avatar</h2>
+    <!-- Avatar Selection Screen -->
+    <div id="avatar-selection">
+        <h2>Select a RMIT Avatar</h2>
         <p>We know choosing the perfect profile picture can be tough! In the meantime, why not pick one of our RMIT-themed images to add some flair to your profile.</p>
         <div id="profile-options">
-            <img src="/imgs/profile_happy.png" class="profile-option" id="happy" alt="Profile picture based on RMIT logo that shows a face as 'Happy Face'">
-            <img src="/imgs/profile_glide.png" class="profile-option" id="glide" alt="Profile picture based on RMIT logo that shows a face as 'Glide Face'">
-            <img src="/imgs/profile_cheery.png" class="profile-option" id="cheery" alt="Profile picture based on RMIT logo that shows a face as 'Cheery Face'">
-            <img src="/imgs/profile_glasses.png" class="profile-option" id="glasses" alt="Profile picture based on RMIT logo that shows a face as 'Glasses Face'">
-            <img src="/imgs/profile_cat.png" class="profile-option" id="cat" alt="Profile picture based on RMIT logo that shows a face as 'Cat Face'">
-            <img src="/imgs/profile_skull.png" class="profile-option" id="skull" alt="Profile picture based on RMIT logo that shows a face as 'Skull Face'">
-            <img src="/imgs/profile_bot.png" class="profile-option" id="bot" alt="Profile picture based on RMIT logo that shows a face as 'Bot Face'">
-            <img src="/imgs/profile_bball.png" class="profile-option" id="bot" alt="Profile picture based on RMIT logo that shows a face as 'Bot Face'">
-            <img src="/imgs/profile_dog.png" class="profile-option" id="bot" alt="Profile picture based on RMIT logo that shows a face as 'Bot Face'">
-            <img src="/imgs/profile_dots.png" class="profile-option" id="bot" alt="Profile picture based on RMIT logo that shows a face as 'Bot Face'">
-            <img src="/imgs/profile_read.png" class="profile-option" id="bot" alt="Profile picture based on RMIT logo that shows a face as 'Bot Face'">
+            <button 
+                class="profile-option" 
+                style="background-image: url('/imgs/profile_happy.png');" 
+                data-src="/imgs/profile_happy.png" 
+                data-alt="Happy Face" 
+                aria-label="Happy Face">
+            </button>
+            <button 
+                class="profile-option" 
+                style="background-image: url('/imgs/profile_glide.png');" 
+                data-src="/imgs/profile_glide.png" 
+                data-alt="Glide Face" 
+                aria-label="Glide Face">
+            </button>
+            <button 
+                class="profile-option" 
+                style="background-image: url('/imgs/profile_cheery.png');" 
+                data-src="/imgs/profile_cheery.png" 
+                data-alt="Cheery Face" 
+                aria-label="Cheery Face">
+            </button>
+            <button 
+                class="profile-option" 
+                style="background-image: url('/imgs/profile_glasses.png');" 
+                data-src="/imgs/profile_glasses.png" 
+                data-alt="Glasses Face" 
+                aria-label="Glasses Face">
+            </button>
+            <button 
+                class="profile-option" 
+                style="background-image: url('/imgs/profile_cat.png');" 
+                data-src="/imgs/profile_cat.png" 
+                data-alt="Cat Face" 
+                aria-label="Cat Face">
+            </button>
+            <button 
+                class="profile-option" 
+                style="background-image: url('/imgs/profile_skull.png');" 
+                data-src="/imgs/profile_skull.png" 
+                data-alt="Skull Face" 
+                aria-label="Skull Face">
+            </button>
+            <button 
+                class="profile-option" 
+                style="background-image: url('/imgs/profile_bot.png');" 
+                data-src="/imgs/profile_bot.png" 
+                data-alt="Bot Face" 
+                aria-label="Bot Face">
+            </button>
+            <button 
+                class="profile-option" 
+                style="background-image: url('/imgs/profile_bball.png');" 
+                data-src="/imgs/profile_bball.png" 
+                data-alt="Basketball Face" 
+                aria-label="Basketball Face">
+            </button>
+            <button 
+                class="profile-option" 
+                style="background-image: url('/imgs/profile_dog.png');" 
+                data-src="/imgs/profile_dog.png" 
+                data-alt="Dog Face" 
+                aria-label="Dog Face">
+            </button>
+            <button 
+                class="profile-option" 
+                style="background-image: url('/imgs/profile_dots.png');" 
+                data-src="/imgs/profile_dots.png" 
+                data-alt="Dotted Eye Face" 
+                aria-label="Dotted Eye Face">
+            </button>
+            <button 
+                class="profile-option" 
+                style="background-image: url('/imgs/profile_read.png');" 
+                data-src="/imgs/profile_read.png" 
+                data-alt="Reading Face" 
+                aria-label="Reading Face">
+            </button>
         </div>
-        <p id="status"></p>
+        <a href="https://rmit.instructure.com/profile" class="add-profile-link" target="_blank">Or add your own profile picture</a>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <div id="confirmation" class="confirmation">
+        <img id="selected-avatar" src="" alt="Selected Avatar">
+        <h3>Are you sure you want to make this image your profile picture?</h3>
+        <div class="confirmation-buttons">
+            <button class="confirmation-button cancel-button">Cancel</button>
+            <button class="confirmation-button add-button">Add to profile</button>
+        </div>
     </div>
 
     <script>
-        // Get the base URL of the current page
-        const baseUrl = window.location.origin;
-    
-        // Add event listeners to each profile image option
-        document.querySelectorAll('.profile-option').forEach(img => {
-            img.addEventListener('click', () => {
-                const imageUrl = img.src;
-                document.getElementById('status').innerText = `Adding ${img.alt}...`;
-    
-                // Send the selected image URL to the server
-                fetch(`${baseUrl}/api/upload-profile-picture`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ imageUrl: imageUrl })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message) {
-                        document.getElementById('status').innerText = data.message;
-                    } else {
-                        document.getElementById('status').innerText = 'Failed to add profile picture.';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('status').innerText = 'Error adding profile picture.';
-                });
-            });
+        const avatarSelection = document.getElementById('avatar-selection');
+        const confirmation = document.getElementById('confirmation');
+        const selectedAvatar = document.getElementById('selected-avatar');
+        const cancelButton = document.querySelector('.cancel-button');
+        const addButton = document.querySelector('.add-button');
+
+      // Show confirmation dialog
+document.querySelectorAll('.profile-option').forEach(button => {
+    button.addEventListener('click', () => {
+        selectedAvatar.src = button.getAttribute('data-src'); // Fetch the correct avatar image URL
+        selectedAvatar.alt = button.getAttribute('data-alt'); // Fetch the correct alt text
+        avatarSelection.style.display = 'none';
+        confirmation.style.display = 'flex';
+    });
+});
+
+        // Cancel button action
+        cancelButton.addEventListener('click', () => {
+            confirmation.style.display = 'none';
+            avatarSelection.style.display = 'block';
+        });
+
+        // Add to profile action
+        addButton.addEventListener('click', () => {
+            confirmation.innerHTML = `
+                <p style="color: #0077cc; font-size: 16px; text-align: center; margin-top: 20px;">
+                    Your profile picture has been successfully updated!
+                </p>`;
         });
     </script>
 </body>
