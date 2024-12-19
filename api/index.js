@@ -141,19 +141,19 @@ app.get('/app', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
 
+// Check Login Status
+app.get('/api/check-auth', (req, res) => {
+    const token = req.cookies.token;
+
+    if (token) {
+        res.json({ authorized: true });
+    } else {
+        res.json({ authorized: false });
+    }
+});
+
 // Start Server
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
-});
-
-//check login
-app.get('/api/check-auth', (req, res) => {
-  const token = req.cookies.token; // Check for existing OAuth token in cookies
-
-  if (token) {
-      res.json({ authorized: true });
-  } else {
-      res.json({ authorized: false });
-  }
 });
