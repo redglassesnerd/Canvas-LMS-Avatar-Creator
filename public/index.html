@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -150,14 +149,21 @@
             </div>
 
             <!-- Avatar Options -->
-            <div id="profile-options" role="listbox" aria-label="Avatar options">
-                <div class="profile-option" tabindex="0" role="option" aria-label="Happy Face" data-src="/imgs/profile_happy.svg"></div>
-                <div class="profile-option" tabindex="0" role="option" aria-label="Glide Face" data-src="/imgs/profile_glide.svg"></div>
-                <div class="profile-option" tabindex="0" role="option" aria-label="Cheery Face" data-src="/imgs/profile_cheery.svg"></div>
-                <div class="profile-option" tabindex="0" role="option" aria-label="Robot Face" data-src="/imgs/profile_bot.svg"></div>
-                <div class="profile-option" tabindex="0" role="option" aria-label="Skull Face" data-src="/imgs/profile_skull.svg"></div>
-                <div class="profile-option" tabindex="0" role="option" aria-label="Cat Face" data-src="/imgs/profile_cat.svg"></div>
-            </div>
+          <!-- Avatar Options -->
+          <div id="profile-options" role="listbox" aria-label="Avatar options">
+            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a Happy Face" data-src="/imgs/profile_happy.svg"></div>
+            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a Glide Face" data-src="/imgs/profile_glide.svg"></div>
+            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a Cheery Face" data-src="/imgs/profile_cheery.svg"></div>
+            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised robot" data-src="/imgs/profile_bot.svg"></div>
+            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised skull " data-src="/imgs/profile_skull.svg"></div>
+            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised cat" data-src="/imgs/profile_cat.svg"></div>
+            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a face with glasses" data-src="/imgs/profile_glasses.svg"></div>
+            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a basketball" data-src="/imgs/profile_bball.svg"></div>
+            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a styilised dog" data-src="/imgs/profile_dog.svg"></div>
+            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a person with dot eyes" data-src="/imgs/profile_dots.svg"></div>
+            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a person reading a book" data-src="/imgs/profile_read.svg"></div>
+
+        </div>
 
             <!-- Set Profile Button -->
             <div class="actions">
@@ -175,8 +181,6 @@
             </div>
         </div>
     </div>
-</body>
-</html>
     <script>
         const profileOptions = document.querySelectorAll('.profile-option');
         const colorButtons = document.querySelectorAll('.color-selectors button');
@@ -187,12 +191,11 @@
         const avatarPreview = document.getElementById('avatar-preview');
         const confirmButton = document.querySelector('.confirm');
         const cancelButton = document.querySelector('.cancel');
-    
+
         let currentColor = '#E61E2A';
         let currentBgColor = '#FFFFFF';
         let selectedAvatar = null;
-    
-        // Fetch and populate SVGs for avatar options
+
         profileOptions.forEach(option => {
             fetch(option.dataset.src)
                 .then(res => res.text())
@@ -202,11 +205,10 @@
                     option.style.backgroundColor = currentBgColor;
                 })
                 .catch(error => console.error(`Failed to load SVG: ${error}`));
-    
+
             option.addEventListener('click', () => selectAvatar(option));
         });
-    
-        // Handle avatar selection
+
         function selectAvatar(option) {
             profileOptions.forEach(o => o.setAttribute('aria-selected', 'false'));
             option.setAttribute('aria-selected', 'true');
@@ -215,8 +217,7 @@
             setProfileBtn.disabled = false;
             setProfileBtn.focus();
         }
-    
-        // Handle color selection for SVG fill
+
         colorButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 currentColor = btn.dataset.color;
@@ -225,90 +226,91 @@
                 profileOptions.forEach(option => updateSVGFill(option, currentColor));
             });
         });
-    
-        // Update background color
+
         bgColorPicker.addEventListener('input', () => {
             currentBgColor = bgColorPicker.value;
             profileOptions.forEach(option => option.style.backgroundColor = currentBgColor);
         });
-    
-        // Handle confirmation screen display
+
         setProfileBtn.addEventListener('click', () => {
             if (!selectedAvatar) return;
-    
+
             const svg = selectedAvatar.querySelector('svg');
             const svgData = new XMLSerializer().serializeToString(svg);
             const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
             const imgUrl = URL.createObjectURL(svgBlob);
-    
+
             avatarPreview.src = imgUrl;
             avatarPreview.style.backgroundColor = currentBgColor;
             avatarSelection.style.display = 'none';
             confirmationScreen.style.display = 'flex';
         });
-    
-        // Confirm button logic
+
         confirmButton.addEventListener('click', async () => {
-            if (!selectedAvatar) return;
-    
-            const svg = selectedAvatar.querySelector('svg');
-            const svgData = new XMLSerializer().serializeToString(svg);
-            const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-    
-            canvas.width = 110;
-            canvas.height = 110;
-    
-            ctx.fillStyle = currentBgColor;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-            const img = new Image();
-            img.onload = async () => {
-                ctx.drawImage(img, 0, 0);
-                const base64Image = canvas.toDataURL('image/png');
-    
-                try {
-                    const response = await fetch('/api/upload-profile-picture', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ imageUrl: base64Image }),
-                    });
-    
-                    const result = await response.json();
-                    if (response.ok) {
-                        showFeedback(result.message || 'Profile picture successfully updated!', true);
-                    } else {
-                        showFeedback(result.error || 'Failed to upload profile picture.', false);
-                    }
-                } catch (error) {
-                    console.error('Upload error:', error);
-                    showFeedback('An error occurred while uploading. Please try again.', false);
-                }
-            };
-    
-            img.src = URL.createObjectURL(svgBlob);
-        });
-    
-        // Cancel button logic
-        cancelButton.addEventListener('click', () => {
-            confirmationScreen.style.display = 'none';
-            avatarSelection.style.display = 'block';
-        });
-    
-        // Update SVG fill colors dynamically
-        function updateSVGFill(option, color) {
-            const svg = option.querySelector('svg');
-            if (svg) {
-                svg.querySelectorAll('[fill]').forEach(el => {
-                    if (el.getAttribute('fill').toUpperCase() === '#E61E2A') {
-                        el.setAttribute('fill', color);
-                    }
-                });
+    if (!selectedAvatar) return;
+
+    const svg = selectedAvatar.querySelector('svg');
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Add padding to the canvas
+    const padding = 10; // 10px padding
+    const canvasSize = 110 + padding * 2; // Adjust for padding
+
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+
+    // Fill the background color including the padding
+    ctx.fillStyle = currentBgColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const img = new Image();
+    img.onload = async () => {
+        // Center the SVG inside the canvas
+        const centerX = padding; // Offset by padding
+        const centerY = padding; // Offset by padding
+
+        ctx.drawImage(img, centerX, centerY, 110, 110); // Draw centered image
+
+        const base64Image = canvas.toDataURL('image/png');
+
+        try {
+            const response = await fetch('/api/upload-profile-picture', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageUrl: base64Image }),
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                showFeedback(result.message || 'Profile picture successfully updated!', true);
+            } else {
+                showFeedback(result.error || 'Failed to upload profile picture.', false);
             }
+        } catch (error) {
+            console.error('Upload error:', error);
+            showFeedback('An error occurred while uploading. Please try again.', false);
         }
-    
-        // Display feedback to the user
+    };
+
+    img.src = URL.createObjectURL(svgBlob);
+});
+        function updateSVGFill(option, color) {
+    const svg = option.querySelector('svg');
+    if (svg) {
+        svg.querySelectorAll('[fill]').forEach(el => {
+            // Check for the initial color (#E61E2A) or the current color to allow switching
+            const currentFill = el.getAttribute('data-original-fill') || el.getAttribute('fill');
+            if (currentFill.toUpperCase() === '#E61E2A') {
+                el.setAttribute('data-original-fill', currentFill); // Store the original fill for reference
+                el.setAttribute('fill', color);
+            }
+        });
+    }
+}
+
         function showFeedback(message, success) {
             const feedback = document.createElement('p');
             feedback.className = 'feedback';
@@ -317,7 +319,7 @@
             confirmationScreen.appendChild(feedback);
             setTimeout(() => {
                 feedback.remove();
-                if (success) location.reload(); // Refresh parent page
+                if (success) location.reload();
             }, 3000);
         }
     </script>

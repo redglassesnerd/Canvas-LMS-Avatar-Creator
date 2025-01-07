@@ -100,7 +100,11 @@ app.post('/api/upload-profile-picture', async (req, res) => {
             body: formData,
         });
 
-        if (!finalizeResponse.ok) throw new Error('Failed to finalize upload.');
+        if (!finalizeResponse.ok) {
+            const errorText = await finalizeResponse.text();
+            console.error('Failed to finalize upload:', errorText);
+            throw new Error('Failed to finalize upload.');
+        }
 
         const uploadedFile = await finalizeResponse.json();
         if (!uploadedFile.url) throw new Error('Uploaded file URL not available.');
@@ -115,7 +119,7 @@ app.post('/api/upload-profile-picture', async (req, res) => {
             body: JSON.stringify({
                 user: {
                     avatar: {
-                        url: uploadedFile.url, // Use the file's URL as the avatar
+                        url: uploadedFile.url,
                     },
                 },
             }),
