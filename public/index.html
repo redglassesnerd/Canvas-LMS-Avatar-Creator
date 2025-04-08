@@ -320,9 +320,14 @@
                 return;
             }
 
-            if (response.status === 401 && result.redirect) {
-                console.warn('Redirecting to OAuth login...');
-                window.location.href = result.redirect;
+            if (response.status === 401) {
+                console.warn('Received 401 response:', result);
+                if (result.redirect) {
+                    console.warn('Redirecting to OAuth login...');
+                    window.location.href = result.redirect;
+                } else {
+                    showFeedback('Unauthorized access. Please login again.', false);
+                }
                 return;
             }
 
