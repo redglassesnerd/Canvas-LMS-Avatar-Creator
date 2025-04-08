@@ -209,6 +209,37 @@
             option.addEventListener('click', () => selectAvatar(option));
         });
 
+        document.addEventListener('keydown', (event) => {
+            const focused = document.activeElement;
+            const options = Array.from(profileOptions);
+            const index = options.indexOf(focused);
+
+            if (index === -1) return;
+
+            const columns = 4; // adjust based on layout
+            let newIndex;
+
+            switch (event.key) {
+                case 'ArrowRight':
+                    newIndex = (index + 1) % options.length;
+                    break;
+                case 'ArrowLeft':
+                    newIndex = (index - 1 + options.length) % options.length;
+                    break;
+                case 'ArrowDown':
+                    newIndex = (index + columns) % options.length;
+                    break;
+                case 'ArrowUp':
+                    newIndex = (index - columns + options.length) % options.length;
+                    break;
+                default:
+                    return; // exit if not an arrow key
+            }
+
+            event.preventDefault();
+            options[newIndex].focus();
+        });
+
         function selectAvatar(option) {
             profileOptions.forEach(o => o.setAttribute('aria-selected', 'false'));
             option.setAttribute('aria-selected', 'true');
