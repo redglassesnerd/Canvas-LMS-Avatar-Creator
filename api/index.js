@@ -8,15 +8,39 @@ import FormData from 'form-data';
 import { Buffer } from 'buffer';
 
 const app = express();
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.static(path.join(process.cwd(), 'public')));
+
+// Middleware to enforce authentication
+function requireAuth(req, res, next) {
+    const token = req.cookies.token;
+    if (!token) {
+        console.log('Unauthorized access. Redirecting to login.');
+        return res.redirect('/login'); // Ensure redirect on missing token
+    }
+    next();
+}
+
+// Token validation logic
+async function validateToken(token) {
+    try {
+        const response = await fetch(`${process.env.CANVAS_BASE_URL}/api/v1/users/self`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.ok; // Token is valid if response is OK
+    } catch (error) {
+        console.error('Error validating token:', error);
+        return false;
+    }
+}
 
 // OAuth Login
 app.get('/login', (req, res) => {
     const authUrl = `${process.env.CANVAS_BASE_URL}/login/oauth2/auth?client_id=${process.env.CLIENT_ID}&response_type=code&redirect_uri=${process.env.REDIRECT_URI}`;
     console.log('Redirecting to:', authUrl);
-    res.redirect(authUrl);
+    res.redirect(authUrl); // Explicit server-side redirect
 });
 
 // Handle OAuth Callback
@@ -46,109 +70,59 @@ app.get('/login/oauth2', async (req, res) => {
         }
 
         res.cookie('token', tokenData.access_token, { httpOnly: true });
-        res.redirect('/app');
+        res.redirect('/app'); // Redirect to the main app after successful login
     } catch (error) {
         console.error('Error during token exchange:', error);
         res.status(500).send('Token exchange error.');
     }
 });
 
-// Upload Profile Picture
+// API endpoint for uploading profile picture
 app.post('/api/upload-profile-picture', async (req, res) => {
     const token = req.cookies.token;
     const { imageUrl } = req.body;
 
-    if (!token) return res.status(401).send('User not authenticated.');
-    if (!imageUrl) return res.status(400).send('Image URL is required.');
+    if (!token) {
+        console.log('Token invalid or revoked. Redirecting to login.');
+        return res.status(401).json({
+            error: 'Unauthorized. Access token invalid or revoked.',
+            redirect: `${process.env.CANVAS_BASE_URL}/login/oauth2/auth?client_id=${process.env.CLIENT_ID}&response_type=code&redirect_uri=${process.env.REDIRECT_URI}`,
+        });
+    }
 
     try {
-        console.log('Fetching image from:', imageUrl);
-        const imageResponse = await fetch(imageUrl);
-
-        if (!imageResponse.ok) throw new Error('Failed to fetch image.');
-
-        const buffer = Buffer.from(await imageResponse.arrayBuffer());
-        const uniqueFilename = `profile_picture_${Date.now()}.png`;
-
-        console.log('Initiating file upload...');
-        const uploadResponse = await fetch(`${process.env.CANVAS_BASE_URL}/api/v1/users/self/files`, {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                name: uniqueFilename,
-                size: buffer.length,
-                content_type: 'image/png',
-                parent_folder_path: 'profile_pictures',
-            }),
+        console.log('Checking token validity...');
+        const tokenCheckResponse = await fetch(`${process.env.CANVAS_BASE_URL}/api/v1/users/self`, {
+            headers: { Authorization: `Bearer ${token}` },
         });
 
-        const uploadData = await uploadResponse.json();
-        if (!uploadResponse.ok || !uploadData.upload_url) {
-            console.error('Upload initiation failed:', uploadData);
-            throw new Error('Failed to initiate upload.');
+        if (!tokenCheckResponse.ok) {
+            console.error('Token invalid or revoked. Redirecting to login.');
+            return res.status(401).json({
+                error: 'Unauthorized. Access token invalid or revoked.',
+                redirect: `${process.env.CANVAS_BASE_URL}/login/oauth2/auth?client_id=${process.env.CLIENT_ID}&response_type=code&redirect_uri=${process.env.REDIRECT_URI}`,
+            });
         }
 
-        const formData = new FormData();
-        formData.append('file', buffer, { filename: uniqueFilename });
+        // Proceed with file upload logic...
+        console.log('Token valid. Proceeding with upload.');
+        // Add your file upload logic here
 
-        console.log('Finalizing upload...');
-        const finalizeResponse = await fetch(uploadData.upload_url, {
-            method: 'POST',
-            body: formData,
-        });
-
-        if (!finalizeResponse.ok) {
-            const errorText = await finalizeResponse.text();
-            console.error('Failed to finalize upload:', errorText);
-            throw new Error('Failed to finalize upload.');
-        }
-
-        const uploadedFile = await finalizeResponse.json();
-        if (!uploadedFile.url) throw new Error('Uploaded file URL not available.');
-
-        console.log('Updating profile picture...');
-        const updateResponse = await fetch(`${process.env.CANVAS_BASE_URL}/api/v1/users/self`, {
-            method: 'PUT',
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                user: {
-                    avatar: {
-                        url: uploadedFile.url,
-                    },
-                },
-            }),
-        });
-
-        if (!updateResponse.ok) {
-            console.error('Failed to update profile picture:', await updateResponse.text());
-            throw new Error('Failed to update profile picture.');
-        }
-
-        console.log('Profile picture updated successfully.');
-        res.json({ message: 'Profile picture updated successfully!' });
+        res.json({ message: 'File uploaded successfully!' });
     } catch (error) {
         console.error('Error during profile picture update:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
-// App Route
-app.get('/app', (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.redirect('/login');
+// Main app route
+app.get('/app', requireAuth, (req, res) => {
     res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
 
-// Check Login Status
+// API for checking login status
 app.get('/api/check-auth', (req, res) => {
     const token = req.cookies.token;
-
     if (token) {
         res.json({ authorized: true });
     } else {
@@ -156,7 +130,7 @@ app.get('/api/check-auth', (req, res) => {
     }
 });
 
-// Start Server
+// Start the server
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

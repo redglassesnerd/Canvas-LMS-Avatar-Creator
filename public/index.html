@@ -247,56 +247,33 @@
         });
 
         confirmButton.addEventListener('click', async () => {
-    if (!selectedAvatar) return;
+            if (!selectedAvatar) return;
 
-    const svg = selectedAvatar.querySelector('svg');
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+            const svg = selectedAvatar.querySelector('svg');
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
 
-    // Add padding to the canvas
-    const padding = 10; // 10px padding
-    const canvasSize = 110 + padding * 2; // Adjust for padding
+            // Add padding to the canvas
+            const padding = 10; // 10px padding
+            const canvasSize = 110 + padding * 2; // Adjust for padding
 
-    canvas.width = canvasSize;
-    canvas.height = canvasSize;
+            canvas.width = canvasSize;
+            canvas.height = canvasSize;
 
-    // Fill the background color including the padding
-    ctx.fillStyle = currentBgColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Fill the background color including the padding
+            ctx.fillStyle = currentBgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const img = new Image();
-    img.onload = async () => {
-        // Center the SVG inside the canvas
-        const centerX = padding; // Offset by padding
-        const centerY = padding; // Offset by padding
+            const img = new Image();
+            img.onload = async () => {
+                const base64Image = canvas.toDataURL('image/png');
+                await uploadProfilePicture(base64Image);
+            };
 
-        ctx.drawImage(img, centerX, centerY, 110, 110); // Draw centered image
-
-        const base64Image = canvas.toDataURL('image/png');
-
-        try {
-            const response = await fetch('/api/upload-profile-picture', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ imageUrl: base64Image }),
-            });
-
-            const result = await response.json();
-            if (response.ok) {
-                showFeedback(result.message || 'Profile picture successfully updated!', true);
-            } else {
-                showFeedback(result.error || 'Failed to upload profile picture.', false);
-            }
-        } catch (error) {
-            console.error('Upload error:', error);
-            showFeedback('An error occurred while uploading. Please try again.', false);
-        }
-    };
-
-    img.src = URL.createObjectURL(svgBlob);
-});
+            img.src = URL.createObjectURL(svgBlob);
+        });
         function updateSVGFill(option, color) {
     const svg = option.querySelector('svg');
     if (svg) {
@@ -322,6 +299,64 @@
                 if (success) location.reload();
             }, 3000);
         }
+
+    // Other existing functions and event listeners...
+
+    function updateSVGFill(option, color) {
+        const svg = option.querySelector('svg');
+        if (svg) {
+            svg.querySelectorAll('[fill]').forEach(el => {
+                const currentFill = el.getAttribute('data-original-fill') || el.getAttribute('fill');
+                if (currentFill.toUpperCase() === '#E61E2A') {
+                    el.setAttribute('data-original-fill', currentFill);
+                    el.setAttribute('fill', color);
+                }
+            });
+        }
+    }
+
+    function showFeedback(message, success) {
+        const feedback = document.createElement('p');
+        feedback.className = 'feedback';
+        feedback.textContent = message;
+        feedback.style.color = success ? '#0077cc' : 'red';
+        confirmationScreen.appendChild(feedback);
+        setTimeout(() => {
+            feedback.remove();
+            if (success) location.reload();
+        }, 3000);
+    }
+
+    // Place the function here
+    async function uploadProfilePicture(imageUrl) {
+    try {
+        const response = await fetch('/api/upload-profile-picture', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageUrl }),
+        });
+
+        if (response.status === 401) {
+            const result = await response.json();
+            if (result.redirect) {
+                console.log('Redirecting to OAuth login...');
+                window.location.href = result.redirect; // Navigate to the OAuth login URL
+                return;
+            }
+        }
+
+        const result = await response.json();
+        if (response.ok) {
+            console.log(result.message || 'Profile picture updated successfully!');
+        } else {
+            console.error(result.error || 'Failed to upload profile picture.');
+            showFeedback(result.error || 'Failed to upload profile picture.', false);
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+        showFeedback('An error occurred while uploading. Please try again.', false);
+    }
+}
     </script>
 </body>
 </html>
