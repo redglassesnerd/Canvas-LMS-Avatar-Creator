@@ -337,6 +337,7 @@
 
             if (response.status === 401) {
                 console.warn('Received 401 response:', result);
+                sessionStorage.setItem('pendingUploadImage', imageUrl);
                 if (result.redirect) {
                     console.warn('Redirecting to OAuth login...');
                     window.location.href = result.redirect;
@@ -358,6 +359,15 @@
             showFeedback('An error occurred while uploading. Please try again.', false);
         }
     }
+
+    // Resume upload if there was a pending upload after auth
+    window.addEventListener('DOMContentLoaded', () => {
+        const pendingImage = sessionStorage.getItem('pendingUploadImage');
+        if (pendingImage) {
+            sessionStorage.removeItem('pendingUploadImage');
+            uploadProfilePicture(pendingImage);
+        }
+    });
     </script>
 </body>
 </html>
