@@ -302,31 +302,6 @@
 
     // Other existing functions and event listeners...
 
-    function updateSVGFill(option, color) {
-        const svg = option.querySelector('svg');
-        if (svg) {
-            svg.querySelectorAll('[fill]').forEach(el => {
-                const currentFill = el.getAttribute('data-original-fill') || el.getAttribute('fill');
-                if (currentFill.toUpperCase() === '#E61E2A') {
-                    el.setAttribute('data-original-fill', currentFill);
-                    el.setAttribute('fill', color);
-                }
-            });
-        }
-    }
-
-    function showFeedback(message, success) {
-        const feedback = document.createElement('p');
-        feedback.className = 'feedback';
-        feedback.textContent = message;
-        feedback.style.color = success ? '#0077cc' : 'red';
-        confirmationScreen.appendChild(feedback);
-        setTimeout(() => {
-            feedback.remove();
-            if (success) location.reload();
-        }, 3000);
-    }
-
     // Place the function here
     async function uploadProfilePicture(imageUrl) {
     try {
