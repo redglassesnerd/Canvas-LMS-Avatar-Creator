@@ -319,7 +319,12 @@
 
     // Place the function here
     async function uploadProfilePicture(imageUrl) {
-        try {
+    if (!document.cookie.includes('token=')) {
+        console.warn('Token not found in cookies. Redirecting to login...');
+        window.location.href = '/login';
+        return;
+    }
+    try {
             const response = await fetch('/api/upload-profile-picture', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
