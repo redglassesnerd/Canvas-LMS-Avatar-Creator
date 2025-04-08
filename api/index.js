@@ -38,6 +38,7 @@ async function validateToken(token) {
 
 // OAuth Login
 app.get('/login', (req, res) => {
+    console.log('REDIRECT_URI (from /login):', process.env.REDIRECT_URI);
     const authUrl = `${process.env.CANVAS_BASE_URL}/login/oauth2/auth?client_id=${process.env.CLIENT_ID}&response_type=code&redirect_uri=${process.env.REDIRECT_URI}`;
     console.log('Redirecting to:', authUrl);
     res.redirect(authUrl); // Explicit server-side redirect
@@ -46,6 +47,8 @@ app.get('/login', (req, res) => {
 // Handle OAuth Callback
 app.get('/login/oauth2', async (req, res) => {
     const { code } = req.query;
+    console.log('Received OAuth code:', code);
+    console.log('REDIRECT_URI (from /login/oauth2):', process.env.REDIRECT_URI);
     if (!code) return res.status(400).send('Authorization code missing.');
 
     try {
@@ -130,7 +133,7 @@ app.get('/api/check-auth', (req, res) => {
     }
 });
 
-// Start the server ss
+// Start the server ssvercel --prod
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
