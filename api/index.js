@@ -130,7 +130,7 @@ app.get('/api/check-auth', (req, res) => {
     }
 });
 
-// Start the server
+// Start the server s
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
