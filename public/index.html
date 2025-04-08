@@ -304,34 +304,40 @@
 
     // Place the function here
     async function uploadProfilePicture(imageUrl) {
-    try {
-        const response = await fetch('/api/upload-profile-picture', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imageUrl }),
-        });
+        try {
+            const response = await fetch('/api/upload-profile-picture', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageUrl }),
+            });
 
-        if (response.status === 401) {
-            const result = await response.json();
-            if (result.redirect) {
-                console.log('Redirecting to OAuth login...');
-                window.location.href = result.redirect; // Navigate to the OAuth login URL
+            let result;
+            try {
+                result = await response.json();
+            } catch (jsonError) {
+                console.error('Could not parse server response:', jsonError);
+                showFeedback('Unexpected response from server.', false);
                 return;
             }
-        }
 
-        const result = await response.json();
-        if (response.ok) {
-            console.log(result.message || 'Profile picture updated successfully!');
-        } else {
-            console.error(result.error || 'Failed to upload profile picture.');
-            showFeedback(result.error || 'Failed to upload profile picture.', false);
+            if (response.status === 401 && result.redirect) {
+                console.warn('Redirecting to OAuth login...');
+                window.location.href = result.redirect;
+                return;
+            }
+
+            if (response.ok) {
+                console.log(result.message || 'Profile picture updated successfully!');
+                showFeedback(result.message || 'Profile picture updated successfully!', true);
+            } else {
+                console.error(result.error || 'Failed to upload profile picture.');
+                showFeedback(result.error || 'Failed to upload profile picture.', false);
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            showFeedback('An error occurred while uploading. Please try again.', false);
         }
-    } catch (error) {
-        console.error('Upload error:', error);
-        showFeedback('An error occurred while uploading. Please try again.', false);
     }
-}
     </script>
 </body>
 </html>
