@@ -34,8 +34,12 @@ export default async function handler(req, res) {
         <body style="background: #f1f2ef; display: flex; justify-content: center; align-items: center; height: 100vh;">
           <p style="font-family: sans-serif; font-size: 18px;">Authorization complete. You can close this window.</p>
           <script>
-            window.opener?.postMessage({ type: 'authComplete' }, '*');
-            window.parent?.postMessage({ type: 'authComplete' }, '*');
+            // Inform parent or opener that auth is complete and trigger re-attempt
+            const target = window.opener || window.parent;
+            if (target) {
+              target.postMessage({ type: 'authComplete' }, '*');
+            }
+            window.close();
           </script>
         </body>
       </html>
