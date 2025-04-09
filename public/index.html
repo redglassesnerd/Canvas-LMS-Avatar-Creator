@@ -376,7 +376,23 @@
                 console.warn('Token invalid. Redirecting to OAuth login...');
                 sessionStorage.setItem('pendingUploadImage', imageUrl);
                 sessionStorage.setItem('pendingRedirectOrigin', window.location.origin);
-                window.location.href = result.redirect;
+                const popup = window.open(result.redirect, '_blank', 'width=600,height=700');
+                if (!popup) {
+                    showFeedback('Please allow popups to complete login.', false);
+                    spinner.style.display = 'none';
+                    return;
+                }
+
+                const authCheckInterval = setInterval(() => {
+                    if (popup.closed) {
+                        clearInterval(authCheckInterval);
+                        const pendingImage = sessionStorage.getItem('pendingUploadImage');
+                        if (pendingImage) {
+                            sessionStorage.removeItem('pendingUploadImage');
+                            uploadProfilePicture(pendingImage);
+                        }
+                    }
+                }, 500);
                 return;
             }
 
