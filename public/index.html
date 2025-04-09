@@ -353,7 +353,6 @@
 
     // Other existing functions and event listeners...
 
-        // Place the function here
     async function uploadProfilePicture(imageUrl) {
         const spinner = document.getElementById('spinner');
         spinner.style.display = 'block';
@@ -377,12 +376,22 @@
 
             if (response.status === 401 && result.redirect) {
                 console.warn('Token invalid. Redirecting to OAuth login...');
+
+                // Prevent infinite loop
+                if (sessionStorage.getItem('authInProgress') === 'true') {
+                    showFeedback('Authentication already in progress. Please complete login.', false);
+                    spinner.style.display = 'none';
+                    return;
+                }
+
                 sessionStorage.setItem('pendingUploadImage', imageUrl);
-                sessionStorage.setItem('pendingRedirectOrigin', window.location.origin);
+                sessionStorage.setItem('authInProgress', 'true');
+
                 const popup = window.open(result.redirect, '_blank', 'width=600,height=700');
                 if (!popup) {
                     showFeedback('Please allow popups to complete login.', false);
                     spinner.style.display = 'none';
+                    sessionStorage.removeItem('authInProgress');
                     return;
                 }
 
@@ -390,11 +399,9 @@
                     if (popup.closed) {
                         clearInterval(authCheckInterval);
                         const pendingImage = sessionStorage.getItem('pendingUploadImage');
-                        const origin = sessionStorage.getItem('pendingRedirectOrigin');
-
-                        if (pendingImage && origin === window.location.origin) {
+                        if (pendingImage) {
                             sessionStorage.removeItem('pendingUploadImage');
-                            sessionStorage.removeItem('pendingRedirectOrigin');
+                            sessionStorage.removeItem('authInProgress');
                             uploadProfilePicture(pendingImage);
                         }
                     }
@@ -427,16 +434,12 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         const pendingImage = sessionStorage.getItem('pendingUploadImage');
-        const pendingOrigin = sessionStorage.getItem('pendingRedirectOrigin');
+        const inProgress = sessionStorage.getItem('authInProgress');
 
-        if (pendingImage) {
+        if (pendingImage && inProgress === 'true') {
             sessionStorage.removeItem('pendingUploadImage');
+            sessionStorage.removeItem('authInProgress');
             uploadProfilePicture(pendingImage);
-        }
-
-        if (pendingOrigin && window.self === window.top && document.referrer.includes(pendingOrigin)) {
-            // Do nothing, user landed here directly not from an iframe
-            sessionStorage.removeItem('pendingRedirectOrigin');
         }
     });
     </script>
