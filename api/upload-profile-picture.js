@@ -12,24 +12,30 @@ export default async function handler(req, res) {
   const { imageUrl } = req.body;
 
   if (!token) {
+    console.log('Token missing, redirecting to auth...');
     return res.status(401).json(redirectToLogin());
   }
 
   try {
-    const canvasSelf = await fetch(`${CANVAS_BASE_URL}/api/v1/users/self`, {
+    // Validate token
+    const selfRes = await fetch(`${CANVAS_BASE_URL}/api/v1/users/self`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    if (!canvasSelf.ok) {
+    if (!selfRes.ok) {
+      console.log('Token invalid or revoked');
       return res.status(401).json(redirectToLogin());
     }
 
-    const imageFetch = await fetch(imageUrl);
-    if (!imageFetch.ok) throw new Error('Failed to fetch image');
-    const imageBuffer = Buffer.from(await imageFetch.arrayBuffer());
+    // Fetch and buffer image
+    const imgRes = await fetch(imageUrl);
+    if (!imgRes.ok) throw new Error('Failed to fetch image from imageUrl');
 
+    const imageBuffer = Buffer.from(await imgRes.arrayBuffer());
     const filename = `profile_${Date.now()}.png`;
-    const uploadInit = await fetch(`${CANVAS_BASE_URL}/api/v1/users/self/files`, {
+
+    // Initiate upload
+    const initRes = await fetch(`${CANVAS_BASE_URL}/api/v1/users/self/files`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -43,24 +49,29 @@ export default async function handler(req, res) {
       }),
     });
 
-    const uploadData = await uploadInit.json();
-    if (!uploadInit.ok || !uploadData.upload_url) {
-      return res.status(400).json({ error: 'Upload init failed', details: uploadData });
+    const initData = await initRes.json();
+    if (!initRes.ok || !initData.upload_url) {
+      console.error('Upload init failed', initData);
+      return res.status(400).json({ error: 'Upload init failed', details: initData });
     }
 
+    // Finalize upload
     const form = new FormData();
-    Object.entries(uploadData.upload_params).forEach(([key, value]) => form.append(key, value));
+    Object.entries(initData.upload_params).forEach(([key, value]) =>
+      form.append(key, value)
+    );
     form.append('file', imageBuffer, { filename });
 
-    const finalize = await fetch(uploadData.upload_url, {
+    const finalizeRes = await fetch(initData.upload_url, {
       method: 'POST',
       body: form,
     });
 
-    const finalizedFile = await finalize.json();
-    if (!finalizedFile.url) throw new Error('Finalized file URL missing');
+    const fileData = await finalizeRes.json();
+    if (!fileData.url) throw new Error('File URL missing after upload');
 
-    const update = await fetch(`${CANVAS_BASE_URL}/api/v1/users/self`, {
+    // Set new avatar
+    const updateRes = await fetch(`${CANVAS_BASE_URL}/api/v1/users/self`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -69,20 +80,21 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         user: {
           avatar: {
-            url: finalizedFile.url,
+            url: fileData.url,
           },
         },
       }),
     });
 
-    if (!update.ok) {
+    if (!updateRes.ok) {
+      console.error('Failed to update avatar');
       return res.status(400).json({ error: 'Failed to update profile picture' });
     }
 
+    console.log('Avatar updated successfully');
     return res.json({ message: 'Profile picture updated successfully!' });
-
   } catch (err) {
-    console.error(err);
+    console.error('Unexpected error:', err);
     return res.status(500).json({ error: err.message });
   }
 }
