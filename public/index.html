@@ -211,20 +211,8 @@
         const cancelButton = document.querySelector('.cancel');
         
         window.addEventListener('message', (event) => {
-            if (event.data && event.data.type === 'oauth-success') {
-                const pendingImage = sessionStorage.getItem('pendingUploadImage');
-                if (pendingImage) {
-                    sessionStorage.removeItem('pendingUploadImage');
-                    uploadProfilePicture(pendingImage);
-                }
-            }
-
             if (event.data && event.data.type === 'profile-uploaded') {
-                if (window.top !== window.self) {
-                    window.top.location.reload();
-                } else {
-                    window.location.reload();
-                }
+                window.location.reload();
             }
         });
 
@@ -385,30 +373,10 @@
             }
 
             if (response.status === 401 && result.redirect) {
-                console.warn('Token invalid. Opening OAuth popup...');
+                console.warn('Token invalid. Redirecting to OAuth login...');
                 sessionStorage.setItem('pendingUploadImage', imageUrl);
                 sessionStorage.setItem('pendingRedirectOrigin', window.location.origin);
-                const popup = window.open(result.redirect, 'oauthPopup', 'width=600,height=700');
-            
-                // Wait for postMessage from the popup indicating auth is complete
-                function waitForAuthPopup(popup, imageUrl) {
-                    return new Promise(resolve => {
-                        function handleMessage(event) {
-                            if (event.data && event.data.type === 'oauth-success') {
-                                window.removeEventListener('message', handleMessage);
-                                popup.close();
-                                resolve(true);
-                            }
-                        }
-
-                        window.addEventListener('message', handleMessage);
-                    }).then(() => {
-                        uploadProfilePicture(imageUrl);
-                    });
-                }
-
-                waitForAuthPopup(popup, imageUrl);
-                spinner.style.display = 'none';
+                window.location.href = result.redirect;
                 return;
             }
 
