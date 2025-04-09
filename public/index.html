@@ -390,7 +390,7 @@ function showFeedback(message, success) {
         feedback.remove();
         if (success) {
             if (window.top !== window.self) {
-                window.top.postMessage({ type: 'refresh-parent' }, '*');
+                window.top.postMessage({ type: 'refresh-parent' }, 'https://rmit.instructure.com');
             } else {
                 window.location.reload();
             }
