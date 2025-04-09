@@ -359,15 +359,10 @@
             if (response.status === 401) {
                 console.warn('Received 401 response:', result);
                 sessionStorage.setItem('pendingUploadImage', imageUrl);
-            if (result.redirect) {
+                if (result.redirect) {
                     console.warn('Redirecting to OAuth login...');
-                    if (window !== window.top) {
-                        window.top.location.href = result.redirect;
-                    } else {
-                        window.location.href = result.redirect;
-                    }
-            } else {
-                    showFeedback('Unauthorized access. Please login again.', false);
+                    sessionStorage.setItem('pendingRedirectOrigin', window.location.href);
+                    window.location.href = result.redirect;
                 }
                 spinner.style.display = 'none';
                 return;
@@ -395,6 +390,11 @@
         if (pendingImage) {
             sessionStorage.removeItem('pendingUploadImage');
             uploadProfilePicture(pendingImage);
+        }
+        const pendingOrigin = sessionStorage.getItem('pendingRedirectOrigin');
+        if (pendingOrigin && window !== window.top) {
+            window.top.location.href = pendingOrigin;
+            sessionStorage.removeItem('pendingRedirectOrigin');
         }
     });
     </script>
