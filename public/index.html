@@ -207,6 +207,12 @@
         const avatarPreview = document.getElementById('avatar-preview');
         const confirmButton = document.querySelector('.confirm');
         const cancelButton = document.querySelector('.cancel');
+        
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'profile-uploaded') {
+                window.location.reload();
+            }
+        });
 
         let currentColor = '#E61E2A';
         let currentBgColor = '#FFFFFF';
