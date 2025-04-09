@@ -403,11 +403,11 @@ function showFeedback(message, success) {
     setTimeout(() => {
         feedback.remove();
         if (success) {
-            if (window.parent !== window.self) {
-                window.parent.postMessage({ type: 'refresh-parent' }, '*');
-            } else {
-                window.location.reload();
-            }
+        if (window.parent !== window.self) {
+            window.parent.location.reload();
+        } else {
+            window.location.reload();
+        }
         }
     }, 2500);
 }
