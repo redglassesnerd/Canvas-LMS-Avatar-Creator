@@ -27,21 +27,7 @@ export default async function handler(req, res) {
     // Set the access token in a secure cookie
     res.setHeader('Set-Cookie', `token=${tokenData.access_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`);
   
-    // Return a success page that posts a message to the parent window
-    res.setHeader('Content-Type', 'text/html');
-    res.end(`
-      <html>
-        <body style="background: #f1f2ef; display: flex; justify-content: center; align-items: center; height: 100vh;">
-          <p style="font-family: sans-serif; font-size: 18px;">Authorization complete. You can close this window.</p>
-          <script>
-            // Inform parent or opener that auth is complete and trigger re-attempt
-            const target = window.opener || window.parent;
-            if (target) {
-              target.postMessage({ type: 'authComplete' }, '*');
-            }
-            window.close();
-          </script>
-        </body>
-      </html>
-    `);
-  }
+    // Redirect to success page
+    res.writeHead(302, { Location: '/auth-success.html' });
+    res.end();
+}

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Authentication Successful</title>
+    <script>
+        window.onload = () => {
+            // Inform the opener or parent window that auth completed
+            const message = { type: 'oauth-success' };
+
+            if (window.opener) {
+                window.opener.postMessage(message, '*');
+                window.close(); // close popup if it was a popup
+            } else if (window.parent !== window) {
+                window.parent.postMessage(message, '*');
+            }
+
+            // fallback message
+            document.getElementById('message').textContent = 'Authentication complete. You can close this tab.';
+        };
+    </script>
+</head>
+<body style="font-family: sans-serif; text-align: center; padding: 50px;">
+    <h2 id="message">Completing authentication…</h2>
+</body>
+</html>
