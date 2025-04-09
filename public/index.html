@@ -385,8 +385,18 @@
 
             if (response.ok) {
                 console.log(result.message || 'Profile picture updated successfully!');
-                showFeedback(result.message || 'Profile picture updated successfully!', true);
                 spinner.style.display = 'none';
+ 
+                // Delay to show success message, then refresh parent
+                setTimeout(() => {
+                    if (window.top !== window.self) {
+                        // In an iframe, tell the parent to refresh
+                        window.top.postMessage({ type: 'refresh-parent' }, '*');
+                    } else {
+                        // Fallback if not in iframe
+                        window.location.reload();
+                    }
+                }, 1500);
             } else {
                 console.error(result.error || 'Failed to upload profile picture.');
                 showFeedback(result.error || 'Failed to upload profile picture.', false);
@@ -410,10 +420,6 @@
 
         if (pendingOrigin && window.self === window.top && document.referrer.includes(pendingOrigin)) {
             // Do nothing, user landed here directly not from an iframe
-            sessionStorage.removeItem('pendingRedirectOrigin');
-        } else if (pendingOrigin && window.self !== window.top) {
-            // We are in an iframe, return to the parent iframe page
-            window.top.location.href = pendingOrigin;
             sessionStorage.removeItem('pendingRedirectOrigin');
         }
     });
