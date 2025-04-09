@@ -5,18 +5,30 @@
     <title>Authentication Successful</title>
     <script>
         window.onload = () => {
-            // Inform the opener or parent window that auth completed
-            const message = { type: 'oauth-success' };
+            const message = { type: 'authSuccess' }; // ensure this matches frontend
+
+            let messageSent = false;
 
             if (window.opener) {
-                window.opener.postMessage(message, '*');
-                window.close(); // close popup if it was a popup
+                try {
+                    window.opener.postMessage(message, '*');
+                    messageSent = true;
+                    window.close(); // close popup if it was a popup
+                } catch (err) {
+                    console.warn('Could not post message to opener:', err);
+                }
             } else if (window.parent !== window) {
-                window.parent.postMessage(message, '*');
+                try {
+                    window.parent.postMessage(message, '*');
+                    messageSent = true;
+                } catch (err) {
+                    console.warn('Could not post message to parent:', err);
+                }
             }
 
-            // fallback message
-            document.getElementById('message').textContent = 'Authentication complete. You can close this tab.';
+            document.getElementById('message').textContent = messageSent
+                ? 'Authentication complete. You can close this tab.'
+                : 'Authentication complete. You may return to the original window.';
         };
     </script>
 </head>
