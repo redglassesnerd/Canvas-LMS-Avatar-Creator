@@ -397,28 +397,12 @@ async function uploadProfilePicture(imageUrl) {
 function showFeedback(message, success) {
     const feedback = document.createElement('p');
     feedback.className = 'feedback';
-    feedback.textContent = message;
+    feedback.textContent = message + ' You can now close this window and refresh Canvas to see your updated profile picture.';
     feedback.style.color = success ? '#0077cc' : 'red';
     confirmationScreen.appendChild(feedback);
 
-    if (success) {
-        const refreshNotice = document.createElement('button');
-        refreshNotice.textContent = 'Refresh Canvas Page';
-        refreshNotice.style.marginTop = '10px';
-        refreshNotice.style.backgroundColor = '#0077cc';
-        refreshNotice.style.color = 'white';
-        refreshNotice.style.border = 'none';
-        refreshNotice.style.padding = '10px 20px';
-        refreshNotice.style.borderRadius = '6px';
-        refreshNotice.style.cursor = 'pointer';
-        refreshNotice.onclick = () => {
-            alert("Please refresh the Canvas page manually to see your updated profile picture.");
-        };
-        confirmationScreen.appendChild(refreshNotice);
-    }
-
     setTimeout(() => {
         if (!success) feedback.remove();
-    }, 3000);
+    }, 5000);
 }
 </script>
