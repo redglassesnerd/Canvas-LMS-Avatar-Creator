@@ -350,10 +350,11 @@
 
     // Other existing functions and event listeners...
 
-    // Place the function here
+        // Place the function here
     async function uploadProfilePicture(imageUrl) {
         const spinner = document.getElementById('spinner');
         spinner.style.display = 'block';
+
         try {
             const response = await fetch('/api/upload-profile-picture', {
                 method: 'POST',
@@ -371,14 +372,16 @@
                 return;
             }
 
-            if (response.status === 401) {
-                console.warn('Received 401 response:', result);
-                sessionStorage.setItem('pendingUploadImage', imageUrl);
-                if (result.redirect) {
-                    console.warn('Redirecting to OAuth login...');
-                    sessionStorage.setItem('pendingRedirectOrigin', window.location.href);
-                    window.location.href = result.redirect;
-                }
+            if (response.status === 401 && result.redirect) {
+                console.warn('Token invalid. Opening OAuth popup...');
+                const popup = window.open(result.redirect, 'oauthPopup', 'width=600,height=700');
+                const checkPopupClosed = setInterval(() => {
+                    if (popup.closed) {
+                        clearInterval(checkPopupClosed);
+                        // Retry upload after auth completes
+                        uploadProfilePicture(imageUrl);
+                    }
+                }, 500);
                 spinner.style.display = 'none';
                 return;
             }
@@ -386,14 +389,11 @@
             if (response.ok) {
                 console.log(result.message || 'Profile picture updated successfully!');
                 spinner.style.display = 'none';
- 
-                // Delay to show success message, then refresh parent
+
                 setTimeout(() => {
                     if (window.top !== window.self) {
-                        // In an iframe, tell the parent to refresh
                         window.top.postMessage({ type: 'refresh-parent' }, '*');
                     } else {
-                        // Fallback if not in iframe
                         window.location.reload();
                     }
                 }, 1500);
