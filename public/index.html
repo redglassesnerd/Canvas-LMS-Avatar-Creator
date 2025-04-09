@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: ##f1f2ef;
+            background-color: #f1f2ef;
             color: #333;
             margin: 0;
             display: flex;
@@ -19,6 +19,7 @@
             max-width: 700px;
             text-align: center;
             border-radius: 10px;
+            background-color: #f1f2ef;
         }
         h2 {
             color: #0077cc;
@@ -239,6 +240,19 @@
             });
         });
 
+        function updateSVGFill(option, color) {
+            const svg = option.querySelector('svg');
+            if (svg) {
+                svg.querySelectorAll('[fill]').forEach(el => {
+                    const currentFill = el.getAttribute('data-original-fill') || el.getAttribute('fill');
+                    if (currentFill.toUpperCase() === '#E61E2A' || currentFill === currentColor) {
+                        el.setAttribute('data-original-fill', currentFill);
+                        el.setAttribute('fill', color);
+                    }
+                });
+            }
+        }
+
         function selectAvatar(option) {
             profileOptions.forEach(o => o.setAttribute('aria-selected', 'false'));
             option.setAttribute('aria-selected', 'true');
@@ -389,8 +403,8 @@ function showFeedback(message, success) {
     setTimeout(() => {
         feedback.remove();
         if (success) {
-            if (window.top !== window.self) {
-                window.top.postMessage({ type: 'refresh-parent' }, 'https://rmit.instructure.com');
+            if (window.parent !== window.self) {
+                window.parent.postMessage({ type: 'refresh-parent' }, '*');
             } else {
                 window.location.reload();
             }
