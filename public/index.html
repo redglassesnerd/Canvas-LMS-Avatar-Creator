@@ -278,8 +278,10 @@
             confirmationScreen.style.display = 'flex';
         });
 
+        let isUploading = false;
         confirmButton.addEventListener('click', async () => {
-            if (!selectedAvatar) return;
+            if (isUploading || !selectedAvatar) return;
+            isUploading = true;
 
             const svg = selectedAvatar.querySelector('svg');
             svg.setAttribute('width', '110');
@@ -308,6 +310,7 @@
                 await uploadProfilePicture(base64Image);
             };
             img.src = URL.createObjectURL(svgBlob);
+            isUploading = false;
         });
         
         cancelButton.addEventListener('click', () => {
@@ -387,8 +390,11 @@
                     if (popup.closed) {
                         clearInterval(authCheckInterval);
                         const pendingImage = sessionStorage.getItem('pendingUploadImage');
-                        if (pendingImage) {
+                        const origin = sessionStorage.getItem('pendingRedirectOrigin');
+
+                        if (pendingImage && origin === window.location.origin) {
                             sessionStorage.removeItem('pendingUploadImage');
+                            sessionStorage.removeItem('pendingRedirectOrigin');
                             uploadProfilePicture(pendingImage);
                         }
                     }

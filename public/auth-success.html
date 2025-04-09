@@ -5,30 +5,40 @@
     <title>Authentication Successful</title>
     <script>
         window.onload = () => {
-            const message = { type: 'authSuccess' }; // ensure this matches frontend
-
+            const message = { type: 'authSuccess' };
+            let attempts = 0;
+            let maxAttempts = 10;
+            let intervalMs = 300;
             let messageSent = false;
 
-            if (window.opener) {
+            const sendMessage = () => {
+                attempts++;
                 try {
-                    window.opener.postMessage(message, '*');
-                    messageSent = true;
-                    window.close(); // close popup if it was a popup
+                    if (window.opener && !window.opener.closed) {
+                        console.log('Posting message to opener...');
+                        window.opener.postMessage(message, '*');
+                        messageSent = true;
+                    } else if (window.parent !== window) {
+                        console.log('Posting message to parent...');
+                        window.parent.postMessage(message, '*');
+                        messageSent = true;
+                    }
                 } catch (err) {
-                    console.warn('Could not post message to opener:', err);
+                    console.warn('Failed to postMessage:', err);
                 }
-            } else if (window.parent !== window) {
-                try {
-                    window.parent.postMessage(message, '*');
-                    messageSent = true;
-                } catch (err) {
-                    console.warn('Could not post message to parent:', err);
-                }
-            }
 
-            document.getElementById('message').textContent = messageSent
-                ? 'Authentication complete. You can close this tab.'
-                : 'Authentication complete. You may return to the original window.';
+                if (messageSent || attempts >= maxAttempts) {
+                    clearInterval(intervalId);
+                    if (window.opener) {
+                        setTimeout(() => window.close(), 500);
+                    }
+                    document.getElementById('message').textContent = messageSent
+                        ? 'Authentication complete. You can close this tab.'
+                        : 'Authentication complete. You may return to the original window.';
+                }
+            };
+
+            const intervalId = setInterval(sendMessage, intervalMs);
         };
     </script>
 </head>
