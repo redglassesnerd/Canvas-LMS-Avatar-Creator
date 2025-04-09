@@ -307,6 +307,11 @@
             };
             img.src = URL.createObjectURL(svgBlob);
         });
+        
+        cancelButton.addEventListener('click', () => {
+            confirmationScreen.style.display = 'none';
+            avatarSelection.style.display = 'block';
+        });
         function updateSVGFill(option, color) {
     const svg = option.querySelector('svg');
     if (svg) {
@@ -327,10 +332,18 @@
             feedback.textContent = message;
             feedback.style.color = success ? '#0077cc' : 'red';
             confirmationScreen.appendChild(feedback);
-            setTimeout(() => {
-                feedback.remove();
-                if (success) window.top.location.reload();
-            }, 3000);
+    setTimeout(() => {
+        feedback.remove();
+        if (success) {
+            if (window.top !== window.self) {
+                // If in an iframe, refresh the parent
+                window.top.location.reload();
+            } else {
+                // Otherwise, refresh the current window
+                window.location.reload();
+            }
+        }
+    }, 3000);
         }
 
     // Other existing functions and event listeners...
