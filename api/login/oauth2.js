@@ -27,6 +27,9 @@ export default async function handler(req, res) {
     // Set the access token in a secure cookie
     res.setHeader('Set-Cookie', `token=${tokenData.access_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`);
   
+    // Log to confirm server-side behavior
+    console.log('OAuth success, token set, redirecting to /auth-success.html');
+  
     // Redirect to success page
     res.writeHead(302, { Location: '/auth-success.html' });
     res.end();

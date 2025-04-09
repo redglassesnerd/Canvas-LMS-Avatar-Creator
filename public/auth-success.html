@@ -19,7 +19,6 @@
                     window.opener.postMessage(message, '*');
                     target = 'opener';
                 } else if (window.parent !== window && document.referrer) {
-                    // Only post to parent if we're in a nested iframe, and there is a referrer (indicating embedding)
                     console.log('✅ Posting authSuccess to parent window...');
                     window.parent.postMessage(message, '*');
                     target = 'parent';
