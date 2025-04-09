@@ -19,7 +19,6 @@
             max-width: 700px;
             text-align: center;
             border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         h2 {
             color: #0077cc;
@@ -90,9 +89,7 @@
             flex-direction: column;
             align-items: center;
             background: #f1f2ef;
-            padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         .confirmation img {
             width: 110px;
@@ -356,10 +353,14 @@
             if (response.status === 401) {
                 console.warn('Received 401 response:', result);
                 sessionStorage.setItem('pendingUploadImage', imageUrl);
-                if (result.redirect) {
+            if (result.redirect) {
                     console.warn('Redirecting to OAuth login...');
-                    window.location.href = result.redirect;
-                } else {
+                    if (window !== window.top) {
+                        window.top.location.href = result.redirect;
+                    } else {
+                        window.location.href = result.redirect;
+                    }
+            } else {
                     showFeedback('Unauthorized access. Please login again.', false);
                 }
                 spinner.style.display = 'none';
