@@ -7,34 +7,32 @@
         window.onload = () => {
             const message = { type: 'authSuccess' };
             let attempts = 0;
-            let maxAttempts = 10;
-            let intervalMs = 300;
-            let messageSent = false;
+            const maxAttempts = 10;
+            const intervalMs = 300;
 
             const sendMessage = () => {
                 attempts++;
-                try {
-                    if (window.opener && !window.opener.closed) {
-                        console.log('Posting message to opener...');
-                        window.opener.postMessage(message, '*');
-                        messageSent = true;
-                    } else if (window.parent !== window) {
-                        console.log('Posting message to parent...');
-                        window.parent.postMessage(message, '*');
-                        messageSent = true;
-                    }
-                } catch (err) {
-                    console.warn('Failed to postMessage:', err);
+                let target = null;
+
+                if (window.opener && !window.opener.closed) {
+                    console.log('✅ Posting authSuccess to opener window...');
+                    window.opener.postMessage(message, '*');
+                    target = 'opener';
+                } else if (window.parent !== window && document.referrer) {
+                    // Only post to parent if we're in a nested iframe, and there is a referrer (indicating embedding)
+                    console.log('✅ Posting authSuccess to parent window...');
+                    window.parent.postMessage(message, '*');
+                    target = 'parent';
                 }
 
-                if (messageSent || attempts >= maxAttempts) {
+                if (target || attempts >= maxAttempts) {
                     clearInterval(intervalId);
-                    if (window.opener) {
+                    if (target === 'opener') {
                         setTimeout(() => window.close(), 500);
                     }
-                    document.getElementById('message').textContent = messageSent
+                    document.getElementById('message').textContent = target
                         ? 'Authentication complete. You can close this tab.'
-                        : 'Authentication complete. You may return to the original window.';
+                        : 'Authentication complete. Please return to the original tab.';
                 }
             };
 
