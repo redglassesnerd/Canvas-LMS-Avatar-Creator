@@ -400,7 +400,12 @@ function showFeedback(message, success) {
     feedback.textContent = message + ' You can now close this window and refresh Canvas to see your updated profile picture.';
     feedback.style.color = success ? '#0077cc' : 'red';
     confirmationScreen.appendChild(feedback);
-
+    
+    if (success) {
+        confirmButton.style.display = 'none';
+        cancelButton.style.display = 'none';
+    }
+    
     setTimeout(() => {
         if (!success) feedback.remove();
     }, 5000);
