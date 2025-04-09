@@ -294,7 +294,7 @@
 
         let isUploading = false;
 
-confirmButton.addEventListener('click', async () => {
+        confirmButton.addEventListener('click', async () => {
     if (isUploading || !selectedAvatar) return;
     isUploading = true;
 
@@ -320,6 +320,10 @@ confirmButton.addEventListener('click', async () => {
         const base64Image = canvas.toDataURL('image/png');
 
         const spinner = document.getElementById('spinner');
+        const confirmBtn = document.querySelector('.confirm');
+        const cancelBtn = document.querySelector('.cancel');
+        const authInstructions = document.getElementById('auth-instructions');
+
         spinner.style.display = 'block';
 
         try {
@@ -340,6 +344,13 @@ confirmButton.addEventListener('click', async () => {
             if (response.status === 401 && result.redirect) {
                 sessionStorage.setItem('pendingUploadImage', base64Image);
                 sessionStorage.setItem('authInProgress', 'true');
+                
+                // Hide buttons and show instruction
+                confirmBtn.style.display = 'none';
+                cancelBtn.style.display = 'none';
+                authInstructions.style.display = 'block';
+                authInstructions.textContent = 'Please authorise the application in the new window. This tab will continue automatically after that.';
+
                 const popup = window.open(result.redirect, 'oauthPopup', 'width=600,height=700');
                 return;
             }
