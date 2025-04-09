@@ -127,6 +127,22 @@
         #set-profile-btn {
             margin-top: 25px;
         }
+
+        .spinner {
+            margin-top: 20px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0077cc;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -181,6 +197,7 @@
                 <button class="cancel">Cancel</button>
                 <button class="confirm">Confirm</button>
             </div>
+            <div id="spinner" class="spinner"></div>
         </div>
     </div>
     <script>
@@ -309,7 +326,7 @@
             confirmationScreen.appendChild(feedback);
             setTimeout(() => {
                 feedback.remove();
-                if (success) location.reload();
+                if (success) window.top.location.reload();
             }, 3000);
         }
 
@@ -317,7 +334,9 @@
 
     // Place the function here
     async function uploadProfilePicture(imageUrl) {
-    try {
+        const spinner = document.getElementById('spinner');
+        spinner.style.display = 'block';
+        try {
             const response = await fetch('/api/upload-profile-picture', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -330,6 +349,7 @@
             } catch (jsonError) {
                 console.error('Could not parse server response:', jsonError);
                 showFeedback('Unexpected response from server.', false);
+                spinner.style.display = 'none';
                 return;
             }
 
@@ -342,19 +362,23 @@
                 } else {
                     showFeedback('Unauthorized access. Please login again.', false);
                 }
+                spinner.style.display = 'none';
                 return;
             }
 
             if (response.ok) {
                 console.log(result.message || 'Profile picture updated successfully!');
                 showFeedback(result.message || 'Profile picture updated successfully!', true);
+                spinner.style.display = 'none';
             } else {
                 console.error(result.error || 'Failed to upload profile picture.');
                 showFeedback(result.error || 'Failed to upload profile picture.', false);
+                spinner.style.display = 'none';
             }
         } catch (error) {
             console.error('Upload error:', error);
             showFeedback('An error occurred while uploading. Please try again.', false);
+            spinner.style.display = 'none';
         }
     }
 
