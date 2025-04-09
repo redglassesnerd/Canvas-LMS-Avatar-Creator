@@ -279,81 +279,32 @@
         });
 
         let isUploading = false;
-        confirmButton.addEventListener('click', async () => {
-            if (isUploading || !selectedAvatar) return;
-            isUploading = true;
 
-            const svg = selectedAvatar.querySelector('svg');
-            svg.setAttribute('width', '110');
-            svg.setAttribute('height', '110');
-            const svgData = new XMLSerializer().serializeToString(svg);
-            const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
+confirmButton.addEventListener('click', async () => {
+    if (isUploading || !selectedAvatar) return;
+    isUploading = true;
 
-            // Add padding to the canvas
-            const padding = 10; // 10px padding
-            const canvasSize = 110 + padding * 2; // Adjust for padding
+    const svg = selectedAvatar.querySelector('svg');
+    svg.setAttribute('width', '110');
+    svg.setAttribute('height', '110');
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
 
-            canvas.width = canvasSize;
-            canvas.height = canvasSize;
+    const padding = 10;
+    const canvasSize = 110 + padding * 2;
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+    ctx.fillStyle = currentBgColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Fill the background color including the padding
-            ctx.fillStyle = currentBgColor;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = async () => {
+        ctx.drawImage(img, padding, padding, 110, 110);
+        const base64Image = canvas.toDataURL('image/png');
 
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            img.onload = async () => {
-                ctx.drawImage(img, padding, padding, 110, 110);
-                const base64Image = canvas.toDataURL('image/png');
-                await uploadProfilePicture(base64Image);
-            };
-            img.src = URL.createObjectURL(svgBlob);
-            isUploading = false;
-        });
-        
-        cancelButton.addEventListener('click', () => {
-            confirmationScreen.style.display = 'none';
-            avatarSelection.style.display = 'block';
-        });
-        function updateSVGFill(option, color) {
-    const svg = option.querySelector('svg');
-    if (svg) {
-        svg.querySelectorAll('[fill]').forEach(el => {
-            // Check for the initial color (#E61E2A) or the current color to allow switching
-            const currentFill = el.getAttribute('data-original-fill') || el.getAttribute('fill');
-            if (currentFill.toUpperCase() === '#E61E2A') {
-                el.setAttribute('data-original-fill', currentFill); // Store the original fill for reference
-                el.setAttribute('fill', color);
-            }
-        });
-    }
-}
-
-        function showFeedback(message, success) {
-            const feedback = document.createElement('p');
-            feedback.className = 'feedback';
-            feedback.textContent = message;
-            feedback.style.color = success ? '#0077cc' : 'red';
-            confirmationScreen.appendChild(feedback);
-    setTimeout(() => {
-        feedback.remove();
-        if (success) {
-            if (window.top !== window.self) {
-                // If in an iframe, refresh the parent
-                window.top.location.reload();
-            } else {
-                // Otherwise, refresh the current window
-                window.location.reload();
-            }
-        }
-    }, 3000);
-        }
-
-    // Other existing functions and event listeners...
-
-    async function uploadProfilePicture(imageUrl) {
         const spinner = document.getElementById('spinner');
         spinner.style.display = 'block';
 
@@ -361,99 +312,89 @@
             const response = await fetch('/api/upload-profile-picture', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ imageUrl }),
+                body: JSON.stringify({ imageUrl: base64Image }),
             });
 
             let result;
             try {
                 result = await response.json();
             } catch (jsonError) {
-                console.error('Could not parse server response:', jsonError);
                 showFeedback('Unexpected response from server.', false);
-                spinner.style.display = 'none';
                 return;
             }
 
             if (response.status === 401 && result.redirect) {
-                console.warn('Token invalid. Redirecting to OAuth login...');
-
-                // Prevent infinite loop
-                if (sessionStorage.getItem('authInProgress') === 'true') {
-                    showFeedback('Authentication already in progress. Please complete login.', false);
-                    spinner.style.display = 'none';
-                    return;
-                }
-
-                sessionStorage.setItem('pendingUploadImage', imageUrl);
+                sessionStorage.setItem('pendingUploadImage', base64Image);
                 sessionStorage.setItem('authInProgress', 'true');
-
                 const popup = window.open(result.redirect, 'oauthPopup', 'width=600,height=700');
-                if (!popup) {
-                    showFeedback('Please allow popups to complete login.', false);
-                    spinner.style.display = 'none';
-                    sessionStorage.removeItem('authInProgress');
-                    return;
-                }
-
-                const authCheckInterval = setInterval(() => {
-                    if (popup.closed) {
-                        clearInterval(authCheckInterval);
-                        const pendingImage = sessionStorage.getItem('pendingUploadImage');
-                        if (pendingImage) {
-                            sessionStorage.removeItem('pendingUploadImage');
-                            sessionStorage.removeItem('authInProgress');
-                            uploadProfilePicture(pendingImage);
-                        }
-                    }
-                }, 500);
                 return;
             }
 
             if (response.ok) {
-                console.log(result.message || 'Profile picture updated successfully!');
-                spinner.style.display = 'none';
-
-                setTimeout(() => {
-                    if (window.top !== window.self) {
-                        window.top.postMessage({ type: 'refresh-parent' }, '*');
-                    } else {
-                        window.location.reload();
-                    }
-                }, 1500);
+                showFeedback(result.message || 'Profile picture updated!', true);
             } else {
-                console.error(result.error || 'Failed to upload profile picture.');
-                showFeedback(result.error || 'Failed to upload profile picture.', false);
-                spinner.style.display = 'none';
+                showFeedback(result.error || 'Failed to upload.', false);
             }
-        } catch (error) {
-            console.error('Upload error:', error);
-            showFeedback('An error occurred while uploading. Please try again.', false);
+        } catch (err) {
+            showFeedback('Upload failed. Try again.', false);
+        } finally {
             spinner.style.display = 'none';
+            isUploading = false;
         }
+    };
+    img.src = URL.createObjectURL(svgBlob);
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+    const pendingImage = sessionStorage.getItem('pendingUploadImage');
+    const inProgress = sessionStorage.getItem('authInProgress');
+    if (pendingImage && inProgress === 'true') {
+        sessionStorage.removeItem('pendingUploadImage');
+        sessionStorage.removeItem('authInProgress');
+        uploadProfilePicture(pendingImage);
     }
+});
 
-        // Listen for auth success message from popup
-        window.addEventListener('message', (event) => {
-            if (event.origin !== window.location.origin) return; // optional, but adds security
-            if (event.data === 'authSuccess') {
-                const pendingImage = sessionStorage.getItem('pendingUploadImage');
-                if (pendingImage) {
-                    sessionStorage.removeItem('pendingUploadImage');
-                    sessionStorage.removeItem('authInProgress');
-                    uploadProfilePicture(pendingImage);
-                }
-            }
+async function uploadProfilePicture(imageUrl) {
+    const spinner = document.getElementById('spinner');
+    spinner.style.display = 'block';
+
+    try {
+        const response = await fetch('/api/upload-profile-picture', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageUrl }),
         });
-        window.addEventListener('DOMContentLoaded', () => {
-        const pendingImage = sessionStorage.getItem('pendingUploadImage');
-        const inProgress = sessionStorage.getItem('authInProgress');
 
-        if (pendingImage && inProgress === 'true') {
-            sessionStorage.removeItem('pendingUploadImage');
-            sessionStorage.removeItem('authInProgress');
-            uploadProfilePicture(pendingImage);
+        let result = await response.json();
+
+        if (response.ok) {
+            showFeedback(result.message || 'Profile updated!', true);
+        } else {
+            showFeedback(result.error || 'Upload failed.', false);
         }
-    });
-    </script>
-</body>
-</html>
+    } catch (err) {
+        showFeedback('Error uploading. Try again.', false);
+    } finally {
+        spinner.style.display = 'none';
+    }
+}
+
+function showFeedback(message, success) {
+    const feedback = document.createElement('p');
+    feedback.className = 'feedback';
+    feedback.textContent = message;
+    feedback.style.color = success ? '#0077cc' : 'red';
+    confirmationScreen.appendChild(feedback);
+    setTimeout(() => {
+        feedback.remove();
+        if (success) {
+            if (window.top !== window.self) {
+                window.top.postMessage({ type: 'refresh-parent' }, '*');
+            } else {
+                window.location.reload();
+            }
+        }
+    }, 2500);
+}
+</script>
