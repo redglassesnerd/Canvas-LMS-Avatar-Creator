@@ -197,6 +197,7 @@
                 <button class="cancel">Cancel</button>
                 <button class="confirm">Confirm</button>
             </div>
+            <p id="auth-instructions" style="display: none; margin-top: 15px; font-size: 14px; color: #333;"></p>
             <div id="spinner" class="spinner"></div>
         </div>
     </div>
@@ -412,6 +413,11 @@ function showFeedback(message, success) {
     feedback.style.color = success ? '#0077cc' : 'red';
     confirmationScreen.appendChild(feedback);
     
+    const authInstructions = document.getElementById('auth-instructions');
+    if (authInstructions) {
+        authInstructions.style.display = 'none';
+    }
+
     if (success) {
         confirmButton.style.display = 'none';
         cancelButton.style.display = 'none';
