@@ -296,7 +296,10 @@
         let isUploading = false;
 
         confirmButton.addEventListener('click', async () => {
-    if (isUploading || !selectedAvatar) return;
+        if (isUploading || !selectedAvatar) {
+            isUploading = false;
+            return;
+        }
     isUploading = true;
 
     const svg = selectedAvatar.querySelector('svg');
@@ -377,7 +380,8 @@ window.addEventListener('DOMContentLoaded', () => {
     if (pendingImage && inProgress === 'true') {
         sessionStorage.removeItem('pendingUploadImage');
         sessionStorage.removeItem('authInProgress');
-        uploadProfilePicture(pendingImage);
+        // Simulate confirm button click to resume upload
+        confirmButton.click();
     }
 });
 
