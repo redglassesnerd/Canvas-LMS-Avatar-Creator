@@ -296,10 +296,7 @@
         let isUploading = false;
 
         confirmButton.addEventListener('click', async () => {
-        if (isUploading || !selectedAvatar) {
-            isUploading = false;
-            return;
-        }
+    if (isUploading || !selectedAvatar) return;
     isUploading = true;
 
     const svg = selectedAvatar.querySelector('svg');
@@ -380,8 +377,12 @@ window.addEventListener('DOMContentLoaded', () => {
     if (pendingImage && inProgress === 'true') {
         sessionStorage.removeItem('pendingUploadImage');
         sessionStorage.removeItem('authInProgress');
-        // Simulate confirm button click to resume upload
-        confirmButton.click();
+        avatarSelection.style.display = 'none';
+        confirmationScreen.style.display = 'flex';
+        avatarPreview.src = ''; // Optional: clear out old image if needed
+        document.getElementById('auth-instructions').textContent = 'Resuming upload after authorisation...';
+        document.getElementById('auth-instructions').style.display = 'block';
+        uploadProfilePicture(pendingImage);
     }
 });
 
