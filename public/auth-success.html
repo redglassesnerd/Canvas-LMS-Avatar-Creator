@@ -1,45 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Authentication Successful</title>
-    <script>
-        window.onload = () => {
-            const message = { type: 'authSuccess' };
-            let attempts = 0;
-            const maxAttempts = 10;
-            const intervalMs = 300;
+  <meta charset="UTF-8" />
+  <title>Authentication Successful</title>
+  <script>
+    window.onload = () => {
+      const message = { type: 'authSuccess' };
 
-            const sendMessage = () => {
-                attempts++;
-                let target = null;
-
-                if (window.opener && !window.opener.closed) {
-                    console.log('✅ Posting authSuccess to opener window...');
-                    window.opener.postMessage(message, '*');
-                    target = 'opener';
-                } else if (window.parent !== window && document.referrer) {
-                    console.log('✅ Posting authSuccess to parent window...');
-                    window.parent.postMessage(message, '*');
-                    target = 'parent';
-                }
-
-                if (target || attempts >= maxAttempts) {
-                    clearInterval(intervalId);
-                    if (target === 'opener') {
-                        setTimeout(() => window.close(), 500);
-                    }
-                    document.getElementById('message').textContent = target
-                        ? 'Authentication complete. You can close this tab.'
-                        : 'Authentication complete. Please return to the original tab.';
-                }
-            };
-
-            const intervalId = setInterval(sendMessage, intervalMs);
-        };
-    </script>
+      if (window.opener && !window.opener.closed) {
+        console.log('✅ Posting authSuccess to opener...');
+        window.opener.postMessage(message, '*');
+        document.getElementById('message').textContent = 'Authentication complete. This window will close automatically.';
+        setTimeout(() => window.close(), 500);
+      } else {
+        console.warn('⚠️ Unable to reach the original tab.');
+        document.getElementById('message').textContent = 'Authentication complete. Please close this window and return to the previous tab.';
+      }
+    };
+  </script>
 </head>
 <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-    <h2 id="message">Completing authentication…</h2>
+  <h2 id="message">Completing authentication…</h2>
 </body>
 </html>
