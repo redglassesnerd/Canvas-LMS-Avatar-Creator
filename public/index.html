@@ -306,7 +306,6 @@
     const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-
     const padding = 10;
     const canvasSize = 110 + padding * 2;
     canvas.width = canvasSize;
@@ -338,21 +337,33 @@
             try {
                 result = await response.json();
             } catch (jsonError) {
-                showFeedback('Unexpected response from server.', false);
+                showFeedback('Unexpected server response.', false);
                 return;
             }
 
             if (response.status === 401 && result.redirect) {
                 sessionStorage.setItem('pendingUploadImage', base64Image);
                 sessionStorage.setItem('authInProgress', 'true');
-                
-                // Hide buttons and show instruction
+
                 confirmBtn.style.display = 'none';
                 cancelBtn.style.display = 'none';
                 authInstructions.style.display = 'block';
                 authInstructions.textContent = 'Please authorise the application in the new window. This tab will continue automatically after that.';
 
                 const popup = window.open(result.redirect, 'oauthPopup', 'width=600,height=700');
+
+                const poll = setInterval(() => {
+                    if (popup.closed) {
+                        clearInterval(poll);
+                        const pendingImage = sessionStorage.getItem('pendingUploadImage');
+                        if (pendingImage) {
+                            sessionStorage.removeItem('pendingUploadImage');
+                            sessionStorage.removeItem('authInProgress');
+                            uploadProfilePicture(pendingImage);
+                        }
+                    }
+                }, 500);
+
                 return;
             }
 
