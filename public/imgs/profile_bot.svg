@@ -1,6 +1,5 @@
-<svg width="101" height="99" viewBox="0 0 101 99" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M100.275 50.7726L100.275 37.9284L89.442 37.9284L89.442 16.5331L66.8612 16.5331L66.8612 0.449217L33.4602 0.449216L33.4602 16.7368L11.4796 16.7368L11.4796 37.9284L0.275397 37.9284L0.275396 49.2407C0.275395 75.6671 22.4057 98.9999 50.1602 98.9999C77.6291 98.9999 100.275 77.2234 100.275 50.7726Z" fill="#E61E2A"/>
-<rect x="22" y="40.7246" width="19" height="17" fill="#222160" stroke="#222160" stroke-width="4" stroke-linecap="round"/>
-<rect x="22" y="68.7246" width="54" height="6" fill="#222160" stroke="#222160" stroke-width="4" stroke-linecap="round"/>
-<rect x="57" y="40.7246" width="19" height="17" fill="#222160" stroke="#222160" stroke-width="4" stroke-linecap="round"/>
+<svg width="59" height="39" viewBox="0 0 59 39" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="2.22461" y="2.75" width="19" height="17" fill="#222160" stroke="#222160" stroke-width="4" stroke-linecap="round"/>
+<rect x="2.22461" y="30.75" width="54" height="6" fill="#222160" stroke="#222160" stroke-width="4" stroke-linecap="round"/>
+<rect x="37.2246" y="2.75" width="19" height="17" fill="#222160" stroke="#222160" stroke-width="4" stroke-linecap="round"/>
 </svg>

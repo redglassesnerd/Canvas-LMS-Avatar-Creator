@@ -57,6 +57,7 @@
             justify-content: center;
         }
         .profile-option {
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -65,7 +66,7 @@
             border-radius: 8px;
             border: 2px solid transparent;
             cursor: pointer;
-            background-color: #fff;
+            background-color: transparent;
             overflow: hidden;
         }
         .profile-option[aria-selected="true"] {
@@ -143,18 +144,57 @@
         html, body {
             overflow-y: auto;
         }
+
+        /* Shape selector styles */
+        .shape-selector {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .shape-selector label {
+            font-size: 16px;
+        }
+
+        .shape-overlay {
+            position: absolute;
+            z-index: 1;
+            width: 110px;
+            height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .profile-option svg {
+            position: relative;
+            z-index: 2;
+        }
     </style>
 </head>
 <body>
     <div class="container" id="main-container">
         <!-- Avatar Selection -->
         <div id="avatar-selection">
-            <h2>Select a RMIT Avatar</h2>
-            <p>Choose one of our themed avatars, customize it with your preferred colors, and set it as your profile picture!</p>
+            <h2>Select a Avatar for your Canvas profile</h2>
+            <p>Choose one of our themed avatars, customize it with your preferred colors, and set it as your Canvas profile picture.</p>
+
+            <!-- Shape Selector -->
+            <div class="shape-selector">
+                <label for="shape">Choose Head Shape:</label>
+                <select id="shape">
+                    <option value="circle">Circle</option>
+                    <option value="square">Square</option>
+                    <option value="triangle">Triangle</option>
+                </select>
+            </div>
 
             <!-- Color Selectors -->
             <div class="color-selectors" aria-label="Choose fill color">
-                <span>Change Fill Color:</span>
+                <span>Change Head Color:</span>
                 <button aria-label="Red" style="background-color: #E61E2A;" data-color="#E61E2A"></button>
                 <button aria-label="Yellow" style="background-color: #FBD640;" data-color="#FBD640"></button>
                 <button aria-label="Grey" style="background-color: #9292AC;" data-color="#9292AC"></button>
@@ -167,21 +207,18 @@
             </div>
 
             <!-- Avatar Options -->
-          <!-- Avatar Options -->
-          <div id="profile-options" role="listbox" aria-label="Avatar options">
-            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a Happy Face" data-src="/imgs/profile_happy.svg"></div>
-            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a Glide Face" data-src="/imgs/profile_glide.svg"></div>
-            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a Cheery Face" data-src="/imgs/profile_cheery.svg"></div>
-            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised robot" data-src="/imgs/profile_bot.svg"></div>
-            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised skull " data-src="/imgs/profile_skull.svg"></div>
-            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised cat" data-src="/imgs/profile_cat.svg"></div>
-            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a face with glasses" data-src="/imgs/profile_glasses.svg"></div>
-            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a basketball" data-src="/imgs/profile_bball.svg"></div>
-            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a styilised dog" data-src="/imgs/profile_dog.svg"></div>
-            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a person with dot eyes" data-src="/imgs/profile_dots.svg"></div>
-            <div class="profile-option" tabindex="0" role="option" aria-label="Image of a person reading a book" data-src="/imgs/profile_read.svg"></div>
-
-        </div>
+            <div id="profile-options" role="listbox" aria-label="Avatar options">
+                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a Happy Face" data-src="/imgs/profile_happy.svg"></div>
+                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a Glide Face" data-src="/imgs/profile_glide.svg"></div>
+                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a Cheery Face" data-src="/imgs/profile_cheery.svg"></div>
+                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised robot" data-src="/imgs/profile_bot.svg"></div>
+                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised skull " data-src="/imgs/profile_skull.svg"></div>
+                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised cat" data-src="/imgs/profile_cat.svg"></div>
+                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a face with glasses" data-src="/imgs/profile_glasses.svg"></div>
+                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a styilised dog" data-src="/imgs/profile_dog.svg"></div>
+                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a person with dot eyes" data-src="/imgs/profile_dots.svg"></div>
+                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a person reading a book" data-src="/imgs/profile_read.svg"></div>
+            </div>
 
             <!-- Set Profile Button -->
             <div class="actions">
@@ -211,6 +248,8 @@
         const avatarPreview = document.getElementById('avatar-preview');
         const confirmButton = document.querySelector('.confirm');
         const cancelButton = document.querySelector('.cancel');
+        const shapeSelector = document.getElementById('shape');
+        let currentShape = 'circle';
         
         window.addEventListener('message', (event) => {
             if (event.data && event.data.type === 'profile-uploaded') {
@@ -222,8 +261,10 @@
         let currentBgColor = '#FFFFFF';
         let selectedAvatar = null;
 
+        // Track promises for SVG loading
+        const svgLoadPromises = [];
         profileOptions.forEach(option => {
-            fetch(option.dataset.src)
+            const p = fetch(option.dataset.src)
                 .then(res => res.text())
                 .then(svg => {
                     option.innerHTML = svg;
@@ -231,6 +272,7 @@
                     option.style.backgroundColor = currentBgColor;
                 })
                 .catch(error => console.error(`Failed to load SVG: ${error}`));
+            svgLoadPromises.push(p);
 
             option.addEventListener('click', () => selectAvatar(option));
             option.addEventListener('keydown', (e) => {
@@ -269,6 +311,9 @@
                 colorButtons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 profileOptions.forEach(option => updateSVGFill(option, currentColor));
+                document.querySelectorAll('.shape-overlay svg').forEach(svg => {
+                    svg.style.fill = currentColor;
+                });
             });
         });
 
@@ -276,6 +321,41 @@
             currentBgColor = bgColorPicker.value;
             profileOptions.forEach(option => option.style.backgroundColor = currentBgColor);
         });
+
+        // Shape selector logic
+        shapeSelector.addEventListener('change', () => {
+            currentShape = shapeSelector.value;
+            applyShapeOverlay();
+        });
+
+        function applyShapeOverlay() {
+            document.querySelectorAll('.profile-option').forEach(option => {
+                let overlay = option.querySelector('.shape-overlay');
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.className = 'shape-overlay';
+                    option.appendChild(overlay);
+                }
+                overlay.innerHTML = getShapeSVG(currentShape);
+                const shapeSvg = overlay.querySelector('svg');
+                if (shapeSvg) {
+                    shapeSvg.style.fill = currentColor;
+                }
+            });
+        }
+
+        function getShapeSVG(shape) {
+            switch (shape) {
+                case 'circle':
+                    return '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45"/></svg>';
+                case 'square':
+                    return '<svg viewBox="0 0 100 100"><rect x="5" y="5" width="90" height="90"/></svg>';
+                case 'triangle':
+                    return '<svg viewBox="0 0 100 100"><polygon points="50,90 10,20 90,20"/></svg>';
+                default:
+                    return '';
+            }
+        }
 
         setProfileBtn.addEventListener('click', () => {
             if (!selectedAvatar) return;
@@ -395,6 +475,10 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('auth-instructions').style.display = 'block';
         uploadProfilePicture(pendingImage);
     }
+    // After all SVGs are loaded, call applyShapeOverlay
+    Promise.all(svgLoadPromises).then(() => {
+        applyShapeOverlay();
+    });
 });
 
 async function uploadProfilePicture(imageUrl) {
