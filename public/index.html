@@ -221,7 +221,7 @@
                     </button>
                     <button aria-label="Shield" class="shape-button" data-shape="shield">
                       <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M0 0H100V50C100 76 76 100 50 100C24 100 0 76 0 50V0Z" fill="#ccc"/>
+                        <path d="M5 5H95V50C95 73.4 73.4 95 50 95C26.6 95 5 73.4 5 50V5Z" fill="#ccc"/>
                       </svg>
                     </button>
                 </div>
@@ -390,7 +390,7 @@
                 case 'square':
                     return '<svg viewBox="0 0 100 100" width="100%" height="100%"><rect x="5" y="5" width="90" height="90"/></svg>';
                 case 'shield':
-                    return '<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><path d="M0 0H100V50C100 76 76 100 50 100C24 100 0 76 0 50V0Z"/></svg>';
+                    return '<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><path d="M5 5H95V50C95 73.4 73.4 95 50 95C26.6 95 5 73.4 5 50V5Z"/></svg>';
                 default:
                     return '';
             }
@@ -443,67 +443,32 @@ confirmButton.addEventListener('click', async () => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = async () => {
+        // Draw base avatar SVG at full size
         ctx.drawImage(img, padding, padding, 110, 110);
-        const base64Image = canvas.toDataURL('image/png');
 
-        const spinner = document.getElementById('spinner');
-        const confirmBtn = document.querySelector('.confirm');
-        const cancelBtn = document.querySelector('.cancel');
-        const authInstructions = document.getElementById('auth-instructions');
+        // Draw the overlay shape SVG (if present)
+        const overlaySvg = selectedAvatar.querySelector(':scope > .shape-overlay svg');
+        if (overlaySvg) {
+            const cloneOverlay = overlaySvg.cloneNode(true);
+            cloneOverlay.removeAttribute('width');
+            cloneOverlay.removeAttribute('height');
+            cloneOverlay.setAttribute('width', 110);
+            cloneOverlay.setAttribute('height', 110);
 
-        spinner.style.display = 'block';
-
-        try {
-            const response = await fetch('/api/upload-profile-picture', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ imageUrl: base64Image }),
-            });
-
-            let result;
-            try {
-                result = await response.json();
-            } catch (jsonError) {
-                showFeedback('Unexpected server response.', false);
-                return;
-            }
-
-            if (response.status === 401 && result.redirect) {
-                sessionStorage.setItem('pendingUploadImage', base64Image);
-                sessionStorage.setItem('authInProgress', 'true');
-
-                confirmBtn.style.display = 'none';
-                cancelBtn.style.display = 'none';
-                authInstructions.style.display = 'block';
-                authInstructions.textContent = 'Please authorise the application in the new window. This tab will continue automatically after that.';
-
-                const popup = window.open(result.redirect, 'oauthPopup', 'width=600,height=700');
-
-                const poll = setInterval(() => {
-                    if (popup.closed) {
-                        clearInterval(poll);
-                        const pendingImage = sessionStorage.getItem('pendingUploadImage');
-                        if (pendingImage) {
-                            sessionStorage.removeItem('pendingUploadImage');
-                            sessionStorage.removeItem('authInProgress');
-                            uploadProfilePicture(pendingImage);
-                        }
-                    }
-                }, 500);
-
-                return;
-            }
-
-            if (response.ok) {
-                showFeedback(result.message || 'Profile picture updated!', true);
-            } else {
-                showFeedback(result.error || 'Failed to upload.', false);
-            }
-        } catch (err) {
-            showFeedback('Upload failed. Try again.', false);
-        } finally {
-            spinner.style.display = 'none';
-            isUploading = false;
+            const overlayData = new XMLSerializer().serializeToString(cloneOverlay);
+            const overlayBlob = new Blob([overlayData], { type: 'image/svg+xml;charset=utf-8' });
+            const overlayImg = new Image();
+            overlayImg.crossOrigin = 'anonymous';
+            overlayImg.onload = () => {
+                ctx.drawImage(overlayImg, padding, padding, 110, 110);
+                const base64Image = canvas.toDataURL('image/png');
+                uploadToCanvas(base64Image);
+            };
+            overlayImg.src = URL.createObjectURL(overlayBlob);
+        } else {
+            // No overlay: convert to PNG and upload
+            const base64Image = canvas.toDataURL('image/png');
+            uploadToCanvas(base64Image);
         }
     };
     img.src = URL.createObjectURL(svgBlob);
@@ -528,28 +493,55 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-async function uploadProfilePicture(imageUrl) {
+// Unified upload logic for both overlay and non-overlay cases
+async function uploadToCanvas(base64Image) {
     const spinner = document.getElementById('spinner');
-    spinner.style.display = 'block';
+    const confirmBtn = document.querySelector('.confirm');
+    const cancelBtn = document.querySelector('.cancel');
+    const authInstructions = document.getElementById('auth-instructions');
 
+    spinner.style.display = 'block';
     try {
         const response = await fetch('/api/upload-profile-picture', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imageUrl }),
+            body: JSON.stringify({ imageUrl: base64Image }),
         });
+        const result = await response.json().catch(() => null);
+        if (response.status === 401 && result && result.redirect) {
+            // existing OAuth logic...
+            sessionStorage.setItem('pendingUploadImage', base64Image);
+            sessionStorage.setItem('authInProgress', 'true');
 
-        let result = await response.json();
+            confirmBtn.style.display = 'none';
+            cancelBtn.style.display = 'none';
+            authInstructions.style.display = 'block';
+            authInstructions.textContent = 'Please authorise the application in the new window. This tab will continue automatically after that.';
 
-        if (response.ok) {
-            showFeedback(result.message || 'Profile updated!', true);
-        } else {
-            showFeedback(result.error || 'Upload failed.', false);
+            const popup = window.open(result.redirect, 'oauthPopup', 'width=600,height=700');
+            const poll = setInterval(() => {
+                if (popup.closed) {
+                    clearInterval(poll);
+                    const pendingImage = sessionStorage.getItem('pendingUploadImage');
+                    if (pendingImage) {
+                        sessionStorage.removeItem('pendingUploadImage');
+                        sessionStorage.removeItem('authInProgress');
+                        uploadToCanvas(pendingImage);
+                    }
+                }
+            }, 500);
+            return;
         }
-    } catch (err) {
-        showFeedback('Error uploading. Try again.', false);
+        if (response.ok) {
+            showFeedback(result.message || 'Profile picture updated!', true);
+        } else {
+            showFeedback(result.error || 'Failed to upload.', false);
+        }
+    } catch {
+        showFeedback('Upload failed. Try again.', false);
     } finally {
         spinner.style.display = 'none';
+        isUploading = false;
     }
 }
 
