@@ -88,7 +88,43 @@ To run the project locally and simulate Vercel's environment:
    vercel dev
    ```
 
+
 3. This will serve the project locally, simulating Vercel's serverless functions.
+
+#### Switching Vercel Accounts/Teams
+
+If you have multiple Vercel accounts (e.g., personal and work), follow these steps to switch:
+
+1. **Logout of your current Vercel account**  
+   ```sh
+   vercel logout
+   ```  
+   Confirm when prompted.
+
+2. **Log in with your work account**  
+   ```sh
+   vercel login
+   ```  
+   Enter your work email and paste the verification code sent to you.
+
+3. **Link your project to the correct team/project**  
+   ```sh
+   vercel link
+   ```  
+   Follow the prompts to choose your work team and existing project. If the project doesn’t exist yet, run `vercel` to create a new one under your work account.
+
+4. **Run the dev server**  
+   ```sh
+   vercel dev
+   ```  
+   Now your local development will use the work account context.
+
+Alternatively, if you stay logged in under the same email but need to switch teams, use:
+
+```sh
+vercel switch
+```  
+Select the appropriate team from the list, then run `vercel dev`.
 
 ### Deployment
 

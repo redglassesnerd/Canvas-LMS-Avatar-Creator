@@ -47,6 +47,20 @@
         .color-selectors button.active {
             outline: 2px solid #000;
         }
+        .shape-button {
+            width: 40px;
+            height: 40px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+        }
+        .shape-button.active {
+            outline: 2px solid #000;
+        }
+        .shape-button svg {
+            width: 100%;
+            height: 100%;
+        }
         .background-selector label {
             font-size: 16px;
         }
@@ -68,6 +82,7 @@
             cursor: pointer;
             background-color: transparent;
             overflow: hidden;
+            box-sizing: border-box;
         }
         .profile-option[aria-selected="true"] {
             border: 3px solid #0077cc;
@@ -93,11 +108,11 @@
             background: #f1f2ef;
             border-radius: 10px;
         }
-        .confirmation img {
+        /* Container mimics the same size as profile-option */
+        #avatar-preview {
             width: 110px;
             height: 110px;
             border-radius: 8px;
-            padding: 5px;
         }
         .button-group {
             display: flex;
@@ -157,12 +172,19 @@
         .shape-selector label {
             font-size: 16px;
         }
+        .shape-selectors {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
         .shape-overlay {
             position: absolute;
+            top: 2.5px;
+            left: 2.5px;
             z-index: 1;
-            width: 110px;
-            height: 110px;
+            width: 100px;
+            height: 100px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -172,6 +194,7 @@
         .profile-option svg {
             position: relative;
             z-index: 2;
+            /* Use intrinsic SVG size, no forced width/height */
         }
     </style>
 </head>
@@ -184,12 +207,24 @@
 
             <!-- Shape Selector -->
             <div class="shape-selector">
-                <label for="shape">Choose Head Shape:</label>
-                <select id="shape">
-                    <option value="circle">Circle</option>
-                    <option value="square">Square</option>
-                    <option value="triangle">Triangle</option>
-                </select>
+                <div class="shape-selectors" aria-label="Choose head shape">
+                    <span>Choose Head Shape:</span>
+                    <button aria-label="Circle" class="shape-button" data-shape="circle">
+                      <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45" fill="#ccc"/>
+                      </svg>
+                    </button>
+                    <button aria-label="Square" class="shape-button" data-shape="square">
+                      <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="5" y="5" width="90" height="90" fill="#ccc"/>
+                      </svg>
+                    </button>
+                    <button aria-label="Shield" class="shape-button" data-shape="shield">
+                      <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0 0H100V50C100 76 76 100 50 100C24 100 0 76 0 50V0Z" fill="#ccc"/>
+                      </svg>
+                    </button>
+                </div>
             </div>
 
             <!-- Color Selectors -->
@@ -229,7 +264,7 @@
         <!-- Confirmation Screen -->
         <div id="confirmation" class="confirmation">
             <h3>Are you sure you want to set this as your profile picture?</h3>
-            <img id="avatar-preview" alt="Avatar Preview" />
+            <div id="avatar-preview"></div>
             <div class="button-group">
                 <button class="cancel">Cancel</button>
                 <button class="confirm">Confirm</button>
@@ -248,7 +283,6 @@
         const avatarPreview = document.getElementById('avatar-preview');
         const confirmButton = document.querySelector('.confirm');
         const cancelButton = document.querySelector('.cancel');
-        const shapeSelector = document.getElementById('shape');
         let currentShape = 'circle';
         
         window.addEventListener('message', (event) => {
@@ -323,9 +357,14 @@
         });
 
         // Shape selector logic
-        shapeSelector.addEventListener('change', () => {
-            currentShape = shapeSelector.value;
-            applyShapeOverlay();
+        const shapeButtons = document.querySelectorAll('.shape-button');
+        shapeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentShape = btn.dataset.shape;
+                shapeButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                applyShapeOverlay();
+            });
         });
 
         function applyShapeOverlay() {
@@ -347,11 +386,11 @@
         function getShapeSVG(shape) {
             switch (shape) {
                 case 'circle':
-                    return '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45"/></svg>';
+                    return '<svg viewBox="0 0 100 100" width="100%" height="100%"><circle cx="50" cy="50" r="45"/></svg>';
                 case 'square':
-                    return '<svg viewBox="0 0 100 100"><rect x="5" y="5" width="90" height="90"/></svg>';
-                case 'triangle':
-                    return '<svg viewBox="0 0 100 100"><polygon points="50,90 10,20 90,20"/></svg>';
+                    return '<svg viewBox="0 0 100 100" width="100%" height="100%"><rect x="5" y="5" width="90" height="90"/></svg>';
+                case 'shield':
+                    return '<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><path d="M0 0H100V50C100 76 76 100 50 100C24 100 0 76 0 50V0Z"/></svg>';
                 default:
                     return '';
             }
@@ -359,27 +398,35 @@
 
         setProfileBtn.addEventListener('click', () => {
             if (!selectedAvatar) return;
-
-            const svg = selectedAvatar.querySelector('svg');
-            svg.setAttribute('width', '110');
-            svg.setAttribute('height', '110');
-            const svgData = new XMLSerializer().serializeToString(svg);
-            const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-            const imgUrl = URL.createObjectURL(svgBlob);
-
-            avatarPreview.src = imgUrl;
-            avatarPreview.style.backgroundColor = currentBgColor;
+            // Clone the selected avatar element (including background and overlay)
+            const clone = selectedAvatar.cloneNode(true);
+            // Remove tabindex and role attributes from the clone
+            clone.removeAttribute('tabindex');
+            clone.removeAttribute('role');
+            // Ensure the clone is not focusable or interactive in confirmation
+            clone.setAttribute('aria-hidden', 'true');
+            // Place the clone into the preview container
+            avatarPreview.innerHTML = '';
+            avatarPreview.appendChild(clone);
+            // Show confirmation screen
             avatarSelection.style.display = 'none';
             confirmationScreen.style.display = 'flex';
         });
 
+        cancelButton.addEventListener('click', () => {
+            confirmationScreen.style.display = 'none';
+            avatarSelection.style.display = 'block';
+        });
+
         let isUploading = false;
 
-        confirmButton.addEventListener('click', async () => {
+confirmButton.addEventListener('click', async () => {
     if (isUploading || !selectedAvatar) return;
     isUploading = true;
 
-    const svg = selectedAvatar.querySelector('svg');
+    // Clone the selected avatar's SVG so we don't modify the original
+    const originalSvg = selectedAvatar.querySelector('svg');
+    const svg = originalSvg.cloneNode(true);
     svg.setAttribute('width', '110');
     svg.setAttribute('height', '110');
     const svgData = new XMLSerializer().serializeToString(svg);
