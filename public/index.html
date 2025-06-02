@@ -400,6 +400,8 @@
             if (!selectedAvatar) return;
             // Clone the selected avatar element (including background and overlay)
             const clone = selectedAvatar.cloneNode(true);
+            // Copy the background color inline style
+            clone.style.backgroundColor = selectedAvatar.style.backgroundColor;
             // Remove tabindex and role attributes from the clone
             clone.removeAttribute('tabindex');
             clone.removeAttribute('role');
@@ -424,54 +426,49 @@ confirmButton.addEventListener('click', async () => {
     if (isUploading || !selectedAvatar) return;
     isUploading = true;
 
-    // Clone the selected avatar's SVG so we don't modify the original
-    const originalSvg = selectedAvatar.querySelector('svg');
-    const svg = originalSvg.cloneNode(true);
-    svg.setAttribute('width', '110');
-    svg.setAttribute('height', '110');
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const padding = 10;
-    const canvasSize = 110 + padding * 2;
-    canvas.width = canvasSize;
-    canvas.height = canvasSize;
-    ctx.fillStyle = currentBgColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // 1) Grab the chosen background color
+    const bg = currentBgColor;
 
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = async () => {
-        // Draw base avatar SVG at full size
-        ctx.drawImage(img, padding, padding, 110, 110);
+    // 2) Get and prepare the face SVG
+    const faceEl = selectedAvatar.querySelector('svg');
+    if (!faceEl) {
+        showFeedback('No avatar SVG found.', false);
+        isUploading = false;
+        return;
+    }
+    const cloneFace = faceEl.cloneNode(true);
+    cloneFace.removeAttribute('width');
+    cloneFace.removeAttribute('height');
+    const faceInner = cloneFace.outerHTML
+        .replace('<svg', '<g transform="translate(10,10)"><svg width="90" height="90"')
+        .replace('</svg>', '</svg></g>');
 
-        // Draw the overlay shape SVG (if present)
-        const overlaySvg = selectedAvatar.querySelector(':scope > .shape-overlay svg');
-        if (overlaySvg) {
-            const cloneOverlay = overlaySvg.cloneNode(true);
-            cloneOverlay.removeAttribute('width');
-            cloneOverlay.removeAttribute('height');
-            cloneOverlay.setAttribute('width', 110);
-            cloneOverlay.setAttribute('height', 110);
+    // 3) Prepare the shape overlay SVG (if present)
+    let overlayGroup = '';
+    const overlayEl = selectedAvatar.querySelector('.shape-overlay svg');
+    if (overlayEl) {
+        const cloneOverlay = overlayEl.cloneNode(true);
+        cloneOverlay.removeAttribute('width');
+        cloneOverlay.removeAttribute('height');
+        overlayGroup = cloneOverlay.outerHTML
+            .replace('<svg', '<g transform="translate(10,10)"><svg width="90" height="90"')
+            .replace('</svg>', '</svg></g>');
+    }
 
-            const overlayData = new XMLSerializer().serializeToString(cloneOverlay);
-            const overlayBlob = new Blob([overlayData], { type: 'image/svg+xml;charset=utf-8' });
-            const overlayImg = new Image();
-            overlayImg.crossOrigin = 'anonymous';
-            overlayImg.onload = () => {
-                ctx.drawImage(overlayImg, padding, padding, 110, 110);
-                const base64Image = canvas.toDataURL('image/png');
-                uploadToCanvas(base64Image);
-            };
-            overlayImg.src = URL.createObjectURL(overlayBlob);
-        } else {
-            // No overlay: convert to PNG and upload
-            const base64Image = canvas.toDataURL('image/png');
-            uploadToCanvas(base64Image);
-        }
-    };
-    img.src = URL.createObjectURL(svgBlob);
+    // 4) Build composite SVG string (110×110)
+    const compositeSVG =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="110" height="110" viewBox="0 0 110 110">
+            <rect width="110" height="110" fill="${bg}" />
+            ${faceInner}
+            ${overlayGroup}
+        </svg>`;
+
+    // 5) Encode composite SVG to Base64 data URL
+    const encoded = window.btoa(unescape(encodeURIComponent(compositeSVG)));
+    const dataURL = `data:image/svg+xml;base64,${encoded}`;
+
+    // 6) Upload to Canvas
+    uploadToCanvas(dataURL);
 });
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -485,7 +482,7 @@ window.addEventListener('DOMContentLoaded', () => {
         avatarPreview.src = ''; // Optional: clear out old image if needed
         document.getElementById('auth-instructions').textContent = 'Resuming upload after authorisation...';
         document.getElementById('auth-instructions').style.display = 'block';
-        uploadProfilePicture(pendingImage);
+        uploadToCanvas(pendingImage);
     }
     // After all SVGs are loaded, call applyShapeOverlay
     Promise.all(svgLoadPromises).then(() => {
@@ -493,7 +490,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Unified upload logic for both overlay and non-overlay cases
+// Upload helper for SVG composite
 async function uploadToCanvas(base64Image) {
     const spinner = document.getElementById('spinner');
     const confirmBtn = document.querySelector('.confirm');
@@ -508,42 +505,46 @@ async function uploadToCanvas(base64Image) {
             body: JSON.stringify({ imageUrl: base64Image }),
         });
         const result = await response.json().catch(() => null);
+
+        // Handle OAuth redirect if needed
         if (response.status === 401 && result && result.redirect) {
-            // existing OAuth logic...
             sessionStorage.setItem('pendingUploadImage', base64Image);
             sessionStorage.setItem('authInProgress', 'true');
 
             confirmBtn.style.display = 'none';
             cancelBtn.style.display = 'none';
             authInstructions.style.display = 'block';
-            authInstructions.textContent = 'Please authorise the application in the new window. This tab will continue automatically after that.';
+            authInstructions.textContent =
+                'Please authorise the application in the new window. This tab will continue automatically after that.';
 
             const popup = window.open(result.redirect, 'oauthPopup', 'width=600,height=700');
             const poll = setInterval(() => {
                 if (popup.closed) {
                     clearInterval(poll);
-                    const pendingImage = sessionStorage.getItem('pendingUploadImage');
-                    if (pendingImage) {
+                    const pendingImg = sessionStorage.getItem('pendingUploadImage');
+                    if (pendingImg) {
                         sessionStorage.removeItem('pendingUploadImage');
                         sessionStorage.removeItem('authInProgress');
-                        uploadToCanvas(pendingImage);
+                        uploadToCanvas(pendingImg);
                     }
                 }
             }, 500);
             return;
         }
+
         if (response.ok) {
             showFeedback(result.message || 'Profile picture updated!', true);
         } else {
             showFeedback(result.error || 'Failed to upload.', false);
         }
-    } catch {
+    } catch (err) {
         showFeedback('Upload failed. Try again.', false);
     } finally {
         spinner.style.display = 'none';
         isUploading = false;
     }
 }
+
 
 function showFeedback(message, success) {
     const feedback = document.createElement('p');
