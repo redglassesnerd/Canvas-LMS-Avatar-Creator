@@ -661,52 +661,10 @@ setProfileBtn.addEventListener('click', () => {
         let isUploading = false;
 
 confirmButton.addEventListener('click', async () => {
-    if (isUploading || !selectedAvatar) return;
+    if (isUploading || !pendingImageDataURL) return;
     isUploading = true;
-
-    // 1) Grab the chosen background color
-    const bg = currentBgColor;
-
-    // 2) Get and prepare the face SVG
-    const faceEl = selectedAvatar.querySelector('svg');
-    if (!faceEl) {
-        showFeedback('No avatar SVG found.', false);
-        isUploading = false;
-        return;
-    }
-    const cloneFace = faceEl.cloneNode(true);
-    cloneFace.removeAttribute('width');
-    cloneFace.removeAttribute('height');
-    const faceInner = cloneFace.outerHTML
-        .replace('<svg', '<g transform="translate(10,10)"><svg width="90" height="90"')
-        .replace('</svg>', '</svg></g>');
-
-    // 3) Prepare the shape overlay SVG (if present)
-    let overlayGroup = '';
-    const overlayEl = selectedAvatar.querySelector('.shape-overlay svg');
-    if (overlayEl) {
-        const cloneOverlay = overlayEl.cloneNode(true);
-        cloneOverlay.removeAttribute('width');
-        cloneOverlay.removeAttribute('height');
-        overlayGroup = cloneOverlay.outerHTML
-            .replace('<svg', '<g transform="translate(10,10)"><svg width="90" height="90"')
-            .replace('</svg>', '</svg></g>');
-    }
-
-    // 4) Build composite SVG string (110×110)
-    const compositeSVG =
-        `<svg xmlns="http://www.w3.org/2000/svg" width="110" height="110" viewBox="0 0 110 110">
-            <rect width="110" height="110" fill="${bg}" />
-            ${faceInner}
-            ${overlayGroup}
-        </svg>`;
-
-    // 5) Encode composite SVG to Base64 data URL
-    const encoded = window.btoa(unescape(encodeURIComponent(compositeSVG)));
-    const dataURL = `data:image/svg+xml;base64,${encoded}`;
-
-    // 6) Upload to Canvas
-    uploadToCanvas(dataURL);
+    // Directly upload the generated PNG dataURL
+    uploadToCanvas(pendingImageDataURL);
 });
 
 window.addEventListener('DOMContentLoaded', () => {
