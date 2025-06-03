@@ -180,8 +180,6 @@
 
         .shape-overlay {
             position: absolute;
-            top: 2.5px;
-            left: 2.5px;
             z-index: 1;
             width: 100px;
             height: 100px;
@@ -191,11 +189,80 @@
             pointer-events: none;
         }
 
-        .profile-option svg {
-            position: relative;
+        .fixed-overlay {
+            position: absolute;
+            width: 100px;
+            height: 100px;
             z-index: 2;
-            /* Use intrinsic SVG size, no forced width/height */
         }
+        .fixed-overlay img {
+            width: 100px;
+            height: 100px;
+        }
+        .movable-face {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .movable-face img {
+            /* Use intrinsic size and center within 100×100 parent */
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+
+
+        /* Explicit z-index for overlays */
+        .fixed-overlay {
+            z-index: 2;
+        }
+        .movable-face {
+            z-index: 3;
+            position:absolute;
+        }
+
+        /* Joystick styles */
+        #joystick-container {
+        margin: 15px auto 0;
+        width: 80px;
+        height: 80px;
+        position: relative;
+        }
+        #joystick-base {
+        width: 80px;
+        height: 80px;
+        border: 2px solid #888;
+        border-radius: 50%;
+        background: #eee;
+        position: relative;
+        box-sizing: border-box;
+        }
+        #joystick-thumb {
+        width: 28px;
+        height: 28px;
+        background: #444;
+        border-radius: 50%;
+        position: absolute;
+        top: 26px;    /* centered: (80−28)/2 */
+        left: 26px;
+        cursor: grab;
+        touch-action: none;
+        }
+
+        /* Ensure avatar-preview <img> respects layout */
+        #avatar-preview {
+        width: 110px;
+        height: 110px;
+        border-radius: 8px;
+        object-fit: contain;
+        }
+
     </style>
 </head>
 <body>
@@ -243,16 +310,142 @@
 
             <!-- Avatar Options -->
             <div id="profile-options" role="listbox" aria-label="Avatar options">
-                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a Happy Face" data-src="/imgs/profile_happy.svg"></div>
-                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a Glide Face" data-src="/imgs/profile_glide.svg"></div>
-                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a Cheery Face" data-src="/imgs/profile_cheery.svg"></div>
-                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised robot" data-src="/imgs/profile_bot.svg"></div>
-                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised skull " data-src="/imgs/profile_skull.svg"></div>
-                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised cat" data-src="/imgs/profile_cat.svg"></div>
-                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a face with glasses" data-src="/imgs/profile_glasses.svg"></div>
-                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a styilised dog" data-src="/imgs/profile_dog.svg"></div>
-                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a person with dot eyes" data-src="/imgs/profile_dots.svg"></div>
-                <div class="profile-option" tabindex="0" role="option" aria-label="Image of a person reading a book" data-src="/imgs/profile_read.svg"></div>
+              <!-- DOG (fixed + movable) -->
+              <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised dog">
+                <div class="fixed-overlay">
+                  <img src="/imgs/profile_dog.svg" width="100" height="100" alt="Fixed dog overlay" />
+                </div>
+                <div class="movable-face">
+                  <img src="/imgs/profile_dog_face.svg" width="47" height="30" alt="Movable dog face" />
+                </div>
+                <div class="shape-overlay">
+                  <svg viewBox="0 0 100 100" width="100%" height="100%">
+                    <circle cx="50" cy="50" r="45" fill="#E61E2A" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- CAT (fixed + movable) -->
+              <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised cat">
+                <div class="fixed-overlay">
+                  <img src="/imgs/profile_cat.svg" width="100" height="100" alt="Fixed cat overlay" />
+                </div>
+                <div class="movable-face">
+                  <img src="/imgs/profile_cat_face.svg" width="47" height="30" alt="Movable cat face" />
+                </div>
+                <div class="shape-overlay">
+                  <svg viewBox="0 0 100 100" width="100%" height="100%">
+                    <circle cx="50" cy="50" r="45" fill="#E61E2A" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- GLASSES (fixed + movable) -->
+              <div class="profile-option" tabindex="0" role="option" aria-label="Image of a face with glasses">
+                <div class="fixed-overlay">
+                  <img src="/imgs/profile_glasses.svg" width="100" height="100" alt="Fixed glasses overlay" />
+                </div>
+                <div class="movable-face">
+                  <img src="/imgs/profile_glasses_face.svg" width="47" height="30" alt="Movable glasses face" />
+                </div>
+                <div class="shape-overlay">
+                  <svg viewBox="0 0 100 100" width="100%" height="100%">
+                    <circle cx="50" cy="50" r="45" fill="#E61E2A" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- GLIDE (fixed + movable) -->
+              <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised glide face">
+                <div class="fixed-overlay">
+                </div>
+                <div class="movable-face">
+                  <img src="/imgs/profile_glide_face.svg" width="47" height="30" alt="Movable glide face" />
+                </div>
+                <div class="shape-overlay">
+                  <svg viewBox="0 0 100 100" width="100%" height="100%">
+                    <circle cx="50" cy="50" r="45" fill="#E61E2A" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- HAPPY (fixed + movable) -->
+              <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised happy face">
+                <div class="fixed-overlay">
+                </div>
+                <div class="movable-face">
+                  <img src="/imgs/profile_happy_face.svg" width="47" height="30" alt="Movable happy face" />
+                </div>
+                <div class="shape-overlay">
+                  <svg viewBox="0 0 100 100" width="100%" height="100%">
+                    <circle cx="50" cy="50" r="45" fill="#E61E2A" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- READ (fixed + movable) -->
+              <div class="profile-option" tabindex="0" role="option" aria-label="Image of a person reading a book">
+                <div class="fixed-overlay">
+                  <img src="/imgs/profile_read.svg" width="100" height="100" alt="Fixed read overlay" />
+                </div>
+                <div class="movable-face">
+                  <img src="/imgs/profile_read_face.svg" width="47" height="30" alt="Movable read face" />
+                </div>
+                <div class="shape-overlay">
+                  <svg viewBox="0 0 100 100" width="100%" height="100%">
+                    <circle cx="50" cy="50" r="45" fill="#E61E2A" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- SKULL (fixed + movable) -->
+              <div class="profile-option" tabindex="0" role="option" aria-label="Image of a stylised skull">
+                <div class="movable-face">
+                  <img src="/imgs/profile_skull_face.svg" width="47" height="30" alt="Movable skull face" />
+                </div>
+                <div class="shape-overlay">
+                  <svg viewBox="0 0 100 100" width="100%" height="100%">
+                    <circle cx="50" cy="50" r="45" fill="#E61E2A" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- CHEERY (movable only) -->
+              <div class="profile-option" tabindex="0" role="option" aria-label="Image of a cheery face">
+                <div class="movable-face">
+                  <img src="/imgs/profile_cheery_face.svg" width="47" height="30" alt="Movable cheery face" />
+                </div>
+                <div class="shape-overlay">
+                  <svg viewBox="0 0 100 100" width="100%" height="100%">
+                    <circle cx="50" cy="50" r="45" fill="#E61E2A" />
+                  </svg>
+                </div>
+              </div>
+
+
+              <!-- DOTS (movable only) -->
+              <div class="profile-option" tabindex="0" role="option" aria-label="Image of stylised dots face">
+                <div class="movable-face">
+                  <img src="/imgs/profile_dots_face.svg" width="47" height="30" alt="Movable dots face" />
+                </div>
+                <div class="shape-overlay">
+                  <svg viewBox="0 0 100 100" width="100%" height="100%">
+                    <circle cx="50" cy="50" r="45" fill="#E61E2A" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- BOT (movable only) -->
+              <div class="profile-option" tabindex="0" role="option" aria-label="Image of a robot face">
+                <div class="movable-face">
+                  <img src="/imgs/profile_bot_face.svg" width="47" height="30" alt="Movable bot face" />
+                </div>
+                <div class="shape-overlay">
+                  <svg viewBox="0 0 100 100" width="100%" height="100%">
+                    <circle cx="50" cy="50" r="45" fill="#E61E2A" />
+                  </svg>
+                </div>
+              </div>
             </div>
 
             <!-- Set Profile Button -->
@@ -264,10 +457,19 @@
         <!-- Confirmation Screen -->
         <div id="confirmation" class="confirmation">
             <h3>Are you sure you want to set this as your profile picture?</h3>
-            <div id="avatar-preview"></div>
+            <img id="avatar-preview" alt="Avatar Preview" />
+            <!-- Joystick Container -->
+           <h4>Final touch! Adjust the positioning of your avatar's face.</h4>
+
+            <div id="joystick-container">
+            <div id="joystick-base">
+                <div id="joystick-thumb" tabindex="0"></div>
+            </div>
+            </div>
             <div class="button-group">
                 <button class="cancel">Cancel</button>
-                <button class="confirm">Confirm</button>
+                <button class="confirm">Add to my Canvas profile</button>
+                <button class="download">Download</button>
             </div>
             <p id="auth-instructions" style="display: none; margin-top: 15px; font-size: 14px; color: #333;"></p>
             <div id="spinner" class="spinner"></div>
@@ -294,19 +496,23 @@
         let currentColor = '#E61E2A';
         let currentBgColor = '#FFFFFF';
         let selectedAvatar = null;
+        let pendingImageDataURL = null;
 
-        // Track promises for SVG loading
+        // Track promises for SVG loading (only for options without fixed/movable children)
         const svgLoadPromises = [];
         profileOptions.forEach(option => {
-            const p = fetch(option.dataset.src)
-                .then(res => res.text())
-                .then(svg => {
-                    option.innerHTML = svg;
-                    updateSVGFill(option, currentColor);
-                    option.style.backgroundColor = currentBgColor;
-                })
-                .catch(error => console.error(`Failed to load SVG: ${error}`));
-            svgLoadPromises.push(p);
+            // If option already has a fixed-overlay or movable-face, skip fetching
+            if (!option.querySelector('.fixed-overlay') && !option.querySelector('.movable-face')) {
+                const p = fetch(option.dataset.src)
+                    .then(res => res.text())
+                    .then(svg => {
+                        option.innerHTML = svg;
+                        updateSVGFill(option, currentColor);
+                        option.style.backgroundColor = currentBgColor;
+                    })
+                    .catch(error => console.error(`Failed to load SVG: ${error}`));
+                svgLoadPromises.push(p);
+            }
 
             option.addEventListener('click', () => selectAvatar(option));
             option.addEventListener('keydown', (e) => {
@@ -396,24 +602,56 @@
             }
         }
 
-        setProfileBtn.addEventListener('click', () => {
-            if (!selectedAvatar) return;
-            // Clone the selected avatar element (including background and overlay)
-            const clone = selectedAvatar.cloneNode(true);
-            // Copy the background color inline style
-            clone.style.backgroundColor = selectedAvatar.style.backgroundColor;
-            // Remove tabindex and role attributes from the clone
-            clone.removeAttribute('tabindex');
-            clone.removeAttribute('role');
-            // Ensure the clone is not focusable or interactive in confirmation
-            clone.setAttribute('aria-hidden', 'true');
-            // Place the clone into the preview container
-            avatarPreview.innerHTML = '';
-            avatarPreview.appendChild(clone);
-            // Show confirmation screen
+setProfileBtn.addEventListener('click', () => {
+    if (!selectedAvatar) return;
+
+    // Reset joystick offsets
+    faceOffsetX = 0;
+    faceOffsetY = 0;
+    joystickThumb.style.transform = 'translate(0px, 0px)';
+
+    // Create 110×110 canvas and draw background, overlay, and centered face
+    const size = 110;
+    const artSize = 100;
+    const offset = (size - artSize) / 2; // equals 5
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // 1) Draw background
+    ctx.fillStyle = currentBgColor;
+    ctx.fillRect(0, 0, size, size);
+
+    // 2) Draw overlay shape
+    const overlaySvg = selectedAvatar.querySelector('.shape-overlay svg');
+    if (overlaySvg) {
+        const cloneOverlay = overlaySvg.cloneNode(true);
+        cloneOverlay.removeAttribute('width');
+        cloneOverlay.removeAttribute('height');
+        cloneOverlay.setAttribute('width', artSize);
+        cloneOverlay.setAttribute('height', artSize);
+        const serializedOverlay = new XMLSerializer().serializeToString(cloneOverlay);
+        const overlayBlob = new Blob([serializedOverlay], { type: 'image/svg+xml;charset=utf-8' });
+        const overlayImg = new Image();
+        overlayImg.crossOrigin = 'anonymous';
+        overlayImg.onload = () => {
+            ctx.drawImage(overlayImg, offset, offset, artSize, artSize);
+            // Instead of drawing face directly, use drawFaceAtOffset for proper sizing
+            drawFaceAtOffset(ctx, selectedAvatar, artSize, offset);
+            // Show confirmation after face is drawn (inside drawFaceAtOffset)
+            // The drawFaceAtOffset function will update pendingImageDataURL and preview
             avatarSelection.style.display = 'none';
             confirmationScreen.style.display = 'flex';
-        });
+        };
+        overlayImg.src = URL.createObjectURL(overlayBlob);
+    } else {
+        // No overlay: draw face directly with drawFaceAtOffset
+        drawFaceAtOffset(ctx, selectedAvatar, artSize, offset);
+        avatarSelection.style.display = 'none';
+        confirmationScreen.style.display = 'flex';
+    }
+});
 
         cancelButton.addEventListener('click', () => {
             confirmationScreen.style.display = 'none';
@@ -567,4 +805,184 @@ function showFeedback(message, success) {
         if (!success) feedback.remove();
     }, 5000);
 }
+
+// ---------------- Joystick Logic ----------------
+
+// Track current offset of the face (in px)
+let faceOffsetX = 0;
+let faceOffsetY = 0;
+const maxOffset = 6;   // reduced to 40% of previous range
+
+// Grab joystick elements
+const joystickThumb = document.getElementById('joystick-thumb');
+const joystickBase = document.getElementById('joystick-base');
+let dragging = false;
+let startX, startY;
+
+// Clamp utility
+function clamp(val, min, max) {
+  return val < min ? min : val > max ? max : val;
+}
+
+// On pointer down, start dragging
+joystickThumb.addEventListener('pointerdown', (e) => {
+  dragging = true;
+  startX = e.clientX;
+  startY = e.clientY;
+  joystickThumb.setPointerCapture(e.pointerId);
+});
+
+// On pointer move, update offsets
+joystickThumb.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  const dx = e.clientX - startX;
+  const dy = e.clientY - startY;
+  // Convert from ±40 px on joystick-base to ±maxOffset
+  const percentX = clamp(dx / 40, -1, 1);
+  const percentY = clamp(dy / 40, -1, 1);
+  faceOffsetX = percentX * maxOffset;
+  faceOffsetY = percentY * maxOffset;
+  // Move thumb icon visually (max ±26 px)
+  const thumbX = clamp(dx, -26, 26);
+  const thumbY = clamp(dy, -26, 26);
+  joystickThumb.style.transform = `translate(${thumbX}px, ${thumbY}px)`;
+  // Redraw preview with new offset
+  updatePreviewCanvasPosition();
+});
+
+// On pointer up (release), stop dragging
+joystickThumb.addEventListener('pointerup', (e) => {
+  dragging = false;
+  joystickThumb.releasePointerCapture(e.pointerId);
+});
+
+// Keyboard support: arrow keys move the joystick thumb
+joystickThumb.addEventListener('keydown', (e) => {
+  const step = 1; // move 1px per key press
+  let handled = true;
+  switch (e.key) {
+    case 'ArrowUp':
+      faceOffsetY = clamp(faceOffsetY - step, -maxOffset, maxOffset);
+      break;
+    case 'ArrowDown':
+      faceOffsetY = clamp(faceOffsetY + step, -maxOffset, maxOffset);
+      break;
+    case 'ArrowLeft':
+      faceOffsetX = clamp(faceOffsetX - step, -maxOffset, maxOffset);
+      break;
+    case 'ArrowRight':
+      faceOffsetX = clamp(faceOffsetX + step, -maxOffset, maxOffset);
+      break;
+    default:
+      handled = false;
+  }
+  if (handled) {
+    e.preventDefault();
+    // Compute thumb position: map faceOffset to ±26px range
+    const thumbX = (faceOffsetX / maxOffset) * 26;
+    const thumbY = (faceOffsetY / maxOffset) * 26;
+    joystickThumb.style.transform = `translate(${thumbX}px, ${thumbY}px)`;
+    updatePreviewCanvasPosition();
+  }
+});
+
+// Helper to redraw the canvas->PNG with the updated offsets
+
+function updatePreviewCanvasPosition() {
+  // If no pending image or no avatar selected, do nothing
+  if (!pendingImageDataURL || !selectedAvatar) return;
+
+  const size = 110;
+  const artSize = 100;
+  const offset = (size - artSize) / 2; // 5px inset
+
+  // Create canvas and draw background + shape + face
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  // Draw background
+  ctx.fillStyle = currentBgColor;
+  ctx.fillRect(0, 0, size, size);
+
+  // Draw shape overlay if present, moving it inversely to faceOffset
+  const overlaySvg = selectedAvatar.querySelector('.shape-overlay svg');
+  if (overlaySvg) {
+    const cloneOverlay = overlaySvg.cloneNode(true);
+    cloneOverlay.removeAttribute('width');
+    cloneOverlay.removeAttribute('height');
+    cloneOverlay.setAttribute('width', artSize);
+    cloneOverlay.setAttribute('height', artSize);
+    const serializedOverlay = new XMLSerializer().serializeToString(cloneOverlay);
+    const overlayBlob = new Blob([serializedOverlay], { type: 'image/svg+xml;charset=utf-8' });
+    const overlayImg = new Image();
+    overlayImg.crossOrigin = 'anonymous';
+    overlayImg.onload = () => {
+      // Move shape only half as far as the face offset
+      const shapeX = offset - faceOffsetX * 0.5;
+      const shapeY = offset - faceOffsetY * 0.5;
+      ctx.drawImage(overlayImg, shapeX, shapeY, artSize, artSize);
+      drawFaceAtOffset(ctx, selectedAvatar, artSize, offset);
+    };
+    overlayImg.src = URL.createObjectURL(overlayBlob);
+  } else {
+    drawFaceAtOffset(ctx, selectedAvatar, artSize, offset);
+  }
+}
+
+function drawFaceAtOffset(ctx, avatarElem, artSize, offset) {
+  // Helper to finalize and update the preview <img>
+  function finalize() {
+    pendingImageDataURL = ctx.canvas.toDataURL('image/png');
+    document.getElementById('avatar-preview').src = pendingImageDataURL;
+  }
+
+  // 1) DRAW FIXED OVERLAY at EXACTLY 100×100 with 5px inset, shifting opposite to faceOffset
+  const fixedImgEl = avatarElem.querySelector('.fixed-overlay img');
+  if (fixedImgEl) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      // Move fixed overlay only one-quarter as far as the face offset
+      const fixedX = offset - faceOffsetX * 0.25;
+      const fixedY = offset - faceOffsetY * 0.25;
+      ctx.drawImage(img, fixedX, fixedY, 100, 100);
+      drawMovable();
+    };
+    img.src = fixedImgEl.src;
+  } else {
+    drawMovable();
+  }
+
+  // 2) DRAW MOVABLE LAYER (eyes/mouth) with joystick offsets
+  function drawMovable() {
+    const faceImgEl = avatarElem.querySelector('.movable-face img');
+    if (faceImgEl) {
+      const img2 = new Image();
+      img2.crossOrigin = 'anonymous';
+      img2.onload = () => {
+        // Scale the face to fill the entire 100×100 region (offset by joystick)
+        const drawX = offset + faceOffsetX;
+        const drawY = offset + faceOffsetY;
+        ctx.drawImage(img2, drawX, drawY, artSize, artSize);
+        finalize();
+      };
+      img2.src = faceImgEl.src;
+    } else {
+      finalize();
+    }
+  }
+}
+
+// DOWNLOAD button logic
+const downloadBtn = document.querySelector('.download');
+downloadBtn.addEventListener('click', () => {
+  if (!pendingImageDataURL) return;
+  const link = document.createElement('a');
+  link.href = pendingImageDataURL;
+  link.download = 'avatar.png';
+  link.click();
+});
+
 </script>
