@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Authentication Successful</title>
+  <script>
+    window.onload = () => {
+      const message = { type: 'authSuccess' };
+      const sentTo = [];
+
+      if (window.opener && !window.opener.closed) {
+        console.log('✅ Posting authSuccess to opener...');
+        window.opener.postMessage(message, '*');
+        sentTo.push('opener');
+      }
+
+      // Always try sending to parent (in case opener was lost or iframe context)
+      if (window.parent && window.parent !== window) {
+        console.log('✅ Posting authSuccess to parent...');
+        window.parent.postMessage(message, '*');
+        sentTo.push('parent');
+      }
+
+      const target = document.getElementById('message');
+      if (sentTo.length > 0) {
+        target.textContent = 'Authentication complete. This window will close automatically.';
+        setTimeout(() => window.close(), 500);
+      } else {
+        console.warn('⚠️ Unable to reach opener or parent.');
+        target.textContent = 'Authentication complete. Please close this window and return to the previous tab.';
+      }
+    };
+  </script>
+  </script>
+</head>
+<body style="font-family: sans-serif; text-align: center; padding: 50px;">
+  <h2 id="message">Completing authentication…</h2>
+</body>
+</html>
