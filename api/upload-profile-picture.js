@@ -5,9 +5,13 @@ import FormData from 'form-data';
 const CANVAS_BASE_URL = process.env.CANVAS_BASE_URL;
 
 const redirectToLogin = () => {
+  const scope = encodeURIComponent(
+    'url:GET|/api/v1/users/self url:POST|/api/v1/users/self/files url:PUT|/api/v1/users/self'
+  );
+
   return {
     error: 'Unauthorized. Access token invalid or revoked.',
-    redirect: `${CANVAS_BASE_URL}/login/oauth2/auth?client_id=${process.env.CLIENT_ID}&response_type=code&redirect_uri=${process.env.REDIRECT_URI}`,
+    redirect: `${CANVAS_BASE_URL}/login/oauth2/auth?client_id=${process.env.CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(process.env.REDIRECT_URI)}&scope=${scope}`,
   };
 };
 
