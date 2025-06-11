@@ -697,6 +697,7 @@ async function uploadToCanvas(base64Image) {
     try {
         const response = await fetch('/api/upload-profile-picture', {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ imageUrl: base64Image }),
         });

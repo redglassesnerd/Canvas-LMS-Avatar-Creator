@@ -6,7 +6,7 @@
       "dest": "/api/upload-profile-picture.mjs"
     },
     {
-      "src": "/login/oauth2",
+      "src": "/api/login/oauth2",
       "dest": "/api/login/oauth2"
     },
     {

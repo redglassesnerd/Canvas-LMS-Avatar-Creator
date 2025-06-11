@@ -1,14 +1,19 @@
+import cookie from 'cookie';
 import fetch from 'node-fetch';
 import FormData from 'form-data';
 
 const CANVAS_BASE_URL = process.env.CANVAS_BASE_URL;
-const redirectToLogin = () => ({
-  error: 'Unauthorized. Access token invalid or revoked.',
-  redirect: `${CANVAS_BASE_URL}/login/oauth2/auth?client_id=${process.env.CLIENT_ID}&response_type=code&redirect_uri=${process.env.REDIRECT_URI}`,
-});
+
+const redirectToLogin = () => {
+  return {
+    error: 'Unauthorized. Access token invalid or revoked.',
+    redirect: `${CANVAS_BASE_URL}/login/oauth2/auth?client_id=${process.env.CLIENT_ID}&response_type=code&redirect_uri=${process.env.REDIRECT_URI}`,
+  };
+};
 
 export default async function handler(req, res) {
-  const token = req.cookies?.token;
+  const cookies = cookie.parse(req.headers.cookie || '');
+  const token = cookies.token;
   const { imageUrl } = req.body;
 
   if (!token) {
@@ -17,7 +22,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Validate token
+    // 1) Validate the existing token by calling /api/v1/users/self
     const selfRes = await fetch(`${CANVAS_BASE_URL}/api/v1/users/self`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -27,14 +32,14 @@ export default async function handler(req, res) {
       return res.status(401).json(redirectToLogin());
     }
 
-    // Fetch and buffer image
+    // 2) Download the Base64 image from the client
     const imgRes = await fetch(imageUrl);
     if (!imgRes.ok) throw new Error('Failed to fetch image from imageUrl');
 
     const imageBuffer = Buffer.from(await imgRes.arrayBuffer());
     const filename = `profile_${Date.now()}.png`;
 
-    // Initiate upload
+    // 3) Initiate upload (request an upload URL & params)
     const initRes = await fetch(`${CANVAS_BASE_URL}/api/v1/users/self/files`, {
       method: 'POST',
       headers: {
@@ -55,7 +60,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Upload init failed', details: initData });
     }
 
-    // Finalize upload
+    // 4) Finalize upload with a multipart/form-data POST
     const form = new FormData();
     Object.entries(initData.upload_params).forEach(([key, value]) =>
       form.append(key, value)
@@ -70,7 +75,7 @@ export default async function handler(req, res) {
     const fileData = await finalizeRes.json();
     if (!fileData.url) throw new Error('File URL missing after upload');
 
-    // Set new avatar
+    // 5) Update the user’s avatar URL in Canvas
     const updateRes = await fetch(`${CANVAS_BASE_URL}/api/v1/users/self`, {
       method: 'PUT',
       headers: {
