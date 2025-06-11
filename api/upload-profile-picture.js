@@ -6,7 +6,7 @@ const CANVAS_BASE_URL = process.env.CANVAS_BASE_URL;
 
 const redirectToLogin = () => {
   const scope = encodeURIComponent(
-    'url:GET|/api/v1/users/self url:POST|/api/v1/users/self/files url:PUT|/api/v1/users/self'
+    'url:GET|/api/v1/users/self url:POST|/api/v1/users/self/files url:PUT|/api/v1/users/self url:GET|/api/v1/files/:id url:GET|/api/v1/users/:id/profile url:POST|/api/v1/users/self/folders'
   );
 
   return {
