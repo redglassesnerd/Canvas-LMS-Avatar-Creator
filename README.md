@@ -2,46 +2,6 @@
 
 This project aims to allow users to upload and set a profile picture using a form, along with other basic functionalities like serving static files and checking server status. The project originally used an Express server, but it has now been modified to work seamlessly with Vercel using serverless functions.
 
-## Changes Made to Adapt to Vercel
-
-### 1. Converting the Express Server to Serverless Functions
-
-Previously, this project used an Express server (`server.mjs`) to handle requests. To make it compatible with Vercel's serverless architecture, we have:
-
-- Split the functionality into separate serverless functions.
-- Removed the ongoing Express server and converted each route into its own function in the `api/` directory.
-
-#### Example Changes:
-- `/` (root) is now handled by a serverless function in `api/index.js`.
-- `/upload-profile-picture` is managed by `api/upload-profile-picture.mjs`.
-
-### 2. Update to `vercel.json`
-
-To ensure Vercel can find and build the correct functions, the `vercel.json` file has been updated:
-
-- **Build Configuration**:
-  ```json
-  {
-    "version": 2,
-    "builds": [
-      {
-        "src": "api/upload-profile-picture.mjs",
-        "use": "@vercel/node"
-      }
-    ],
-    "routes": [
-      {
-        "src": "/api/(.*)",
-        "dest": "/api/upload-profile-picture.mjs"
-      },
-      {
-        "src": "/(.*)",
-        "dest": "/public/$1"
-      }
-    ]
-  }
-  ```
-  This configuration builds the serverless functions and serves static files from the `public/` directory.
 
 ### 3. Handling Static Files
 
